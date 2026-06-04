@@ -1,0 +1,14 @@
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\exception\DocumentoDuplicadoException.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\repository\DocumentoTributarioRepository.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\controller\FacturacionController.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\FacturacionApplication.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\exception\DocumentoNoEncontradoException.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\exception\ErrorResponse.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\service\FacturacionService.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\dto\EmitirDocumentoRequestDTO.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\config\DataInitializer.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\exception\GlobalExceptionHandler.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\service\FacturacionServiceImpl.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\dto\DocumentoResponseDTO.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\model\DocumentoTributario.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-facturacion\src\main\java\cl\bookpointchile\facturacion\exception\DatosFacturacionIncompletosException.java

@@ -1,0 +1,17 @@
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\exception\GlobalExceptionHandler.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\config\DataInitializer.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\CatalogoApplication.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\dto\ResenaResponseDTO.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\repository\ResenaRepository.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\dto\ProductoResponseDTO.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\exception\ProductoNoEncontradoException.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\model\Resena.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\controller\CatalogoController.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\dto\ProductoRegistroRequestDTO.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\dto\ResenaRequestDTO.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\repository\ProductoRepository.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\service\CatalogoServiceImpl.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\exception\ResourceNotFoundException.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\service\CatalogoService.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\model\Producto.java
+C:\Users\renat\OneDrive\Documentos\Duoc\Fullstack I\Bookpoint\ms-catalogo\src\main\java\cl\bookpointchile\catalogo\exception\ErrorResponse.java
