@@ -1,0 +1,21 @@
+package cl.bookpointchile.inventario.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SucursalMaestraResponseDTO {
+    private Long id;
+    private String nombre;
+    private String direccion;
+    private String comuna;
+    private String region;
+    private String telefono;
+    private String horarioAtencion;
+    private String estadoOperativo;
+}

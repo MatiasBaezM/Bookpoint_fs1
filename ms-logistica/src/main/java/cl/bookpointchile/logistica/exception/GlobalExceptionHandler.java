@@ -39,6 +39,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(OrigenNoDisponibleException.class)
+    public ResponseEntity<ErrorResponse> handleOrigenNoDisponible(OrigenNoDisponibleException ex, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Conflict - Origen No Disponible")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<String> details = ex.getBindingResult()

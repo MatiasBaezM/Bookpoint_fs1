@@ -1,8 +1,11 @@
 package cl.bookpointchile.logistica.service;
 
+import cl.bookpointchile.logistica.client.SucursalesClient;
 import cl.bookpointchile.logistica.dto.ActualizarEstadoRequestDTO;
 import cl.bookpointchile.logistica.dto.CrearEnvioRequestDTO;
 import cl.bookpointchile.logistica.dto.EnvioResponseDTO;
+import cl.bookpointchile.logistica.dto.SucursalResponseDTO;
+import cl.bookpointchile.logistica.exception.OrigenNoDisponibleException;
 import cl.bookpointchile.logistica.exception.ResourceNotFoundException;
 import cl.bookpointchile.logistica.exception.TransicionEstadoInvalidaException;
 import cl.bookpointchile.logistica.model.Envio;
@@ -25,6 +28,7 @@ public class LogisticaServiceImpl implements LogisticaService {
 
     private final EnvioRepository envioRepository;
     private final RutaDistribucionRepository rutaDistribucionRepository;
+    private final SucursalesClient sucursalesClient;
 
     @Override
     @Transactional
@@ -63,6 +67,28 @@ public class LogisticaServiceImpl implements LogisticaService {
                     // Fallback en caso de base de datos vacía
                     rutaSelected = rutaDistribucionRepository.findAll().stream().findFirst().orElse(null);
                 }
+            }
+        }
+
+        // 3. Validar disponibilidad operativa de la sucursal de origen vía ms-sucursales (best-effort)
+        if (rutaSelected != null) {
+            final RutaDistribucion rutaParaValidar = rutaSelected;
+            try {
+                List<SucursalResponseDTO> sucursales = sucursalesClient.obtenerTodas();
+                boolean origenDisponible = sucursales.stream()
+                        .anyMatch(s -> s.getNombre().equalsIgnoreCase(rutaParaValidar.getOrigen())
+                                && "ACTIVO".equalsIgnoreCase(s.getEstadoOperativo()));
+                if (!origenDisponible) {
+                    log.warn("La sucursal de origen '{}' de la ruta '{}' no está operativa o no fue encontrada en ms-sucursales.",
+                            rutaSelected.getOrigen(), rutaSelected.getDestino());
+                    throw new OrigenNoDisponibleException("La sucursal de origen '" + rutaSelected.getOrigen() +
+                            "' no se encuentra operativa actualmente. No es posible despachar el envío.");
+                }
+            } catch (OrigenNoDisponibleException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("No fue posible validar la disponibilidad de la sucursal de origen '{}' con ms-sucursales: {}",
+                        rutaSelected.getOrigen(), e.getMessage());
             }
         }
 

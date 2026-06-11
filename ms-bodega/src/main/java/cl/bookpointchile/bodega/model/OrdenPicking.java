@@ -24,6 +24,12 @@ public class OrdenPicking {
     @Column(name = "venta_id", nullable = false, unique = true)
     private Long ventaId; // Una venta no puede ser armada en caja más de una vez
 
+    @Column(name = "producto_id", nullable = false)
+    private Long productoId; // Producto a buscar/asociado al stock en ms-inventario
+
+    @Column(nullable = false)
+    private Integer cantidad; // Cantidad de unidades a recolectar y descontar de ms-inventario
+
     @Column(name = "operario_asignado", nullable = false, length = 100)
     private String operarioAsignado; // Operario encargado de buscar los libros
 

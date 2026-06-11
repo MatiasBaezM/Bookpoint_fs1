@@ -1,5 +1,6 @@
 package cl.bookpointchile.inventario.service;
 
+import cl.bookpointchile.inventario.client.SucursalesClient;
 import cl.bookpointchile.inventario.dto.*;
 import cl.bookpointchile.inventario.exception.ResourceNotFoundException;
 import cl.bookpointchile.inventario.exception.StockInsuficienteException;
@@ -8,6 +9,7 @@ import cl.bookpointchile.inventario.model.Inventario;
 import cl.bookpointchile.inventario.model.Sucursal;
 import cl.bookpointchile.inventario.repository.InventarioRepository;
 import cl.bookpointchile.inventario.repository.SucursalRepository;
+import feign.FeignException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class InventarioServiceImpl implements InventarioService {
     private final InventarioRepository inventarioRepository;
     private final SucursalRepository sucursalRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final SucursalesClient sucursalesClient;
 
     @Override
     @Transactional
@@ -37,6 +40,8 @@ public class InventarioServiceImpl implements InventarioService {
                     log.error("Ajuste fallido: Sucursal con ID {} no existe.", request.getSucursalId());
                     return new SucursalNoEncontradaException("La sucursal con ID " + request.getSucursalId() + " no fue encontrada.");
                 });
+
+        validarSucursalActivaEnMaestro(sucursal);
 
         Inventario inventario = inventarioRepository
                 .findByProductoIdAndSucursalId(request.getProductoId(), request.getSucursalId())
@@ -96,6 +101,9 @@ public class InventarioServiceImpl implements InventarioService {
 
         Sucursal destino = sucursalRepository.findById(request.getSucursalDestinoId())
                 .orElseThrow(() -> new SucursalNoEncontradaException("La sucursal de destino con ID " + request.getSucursalDestinoId() + " no existe."));
+
+        validarSucursalActivaEnMaestro(origen);
+        validarSucursalActivaEnMaestro(destino);
 
         Inventario inventarioOrigen = inventarioRepository
                 .findByProductoIdAndSucursalId(request.getProductoId(), request.getSucursalOrigenId())
@@ -259,6 +267,28 @@ public class InventarioServiceImpl implements InventarioService {
                     .build();
             rabbitTemplate.convertAndSend(cl.bookpointchile.inventario.config.RabbitMQConfig.EXCHANGE_VENTAS, cl.bookpointchile.inventario.config.RabbitMQConfig.ROUTING_KEY_STOCK_RECHAZADO, rechazadoEvent);
             log.info("StockRechazadoEvent emitido por falta de stock u error para Venta ID: {}", event.getVentaId());
+        }
+    }
+
+    // Valida la sucursal local contra el maestro de sucursales (ms-sucursales) - degrada con un warning si no está disponible
+    private void validarSucursalActivaEnMaestro(Sucursal sucursal) {
+        try {
+            SucursalMaestraResponseDTO maestra = sucursalesClient.obtenerPorId(sucursal.getId());
+            if (!"ACTIVO".equalsIgnoreCase(maestra.getEstadoOperativo())) {
+                log.error("Sucursal '{}' (ID {}) no está activa en el maestro de sucursales (ms-sucursales). Estado: {}",
+                        sucursal.getNombre(), sucursal.getId(), maestra.getEstadoOperativo());
+                throw new SucursalNoEncontradaException("La sucursal '" + sucursal.getNombre() +
+                        "' no se encuentra operativa en el maestro de sucursales (ms-sucursales).");
+            }
+        } catch (SucursalNoEncontradaException e) {
+            throw e;
+        } catch (FeignException.NotFound e) {
+            log.error("Sucursal '{}' (ID {}) no existe en el maestro de sucursales (ms-sucursales).", sucursal.getNombre(), sucursal.getId());
+            throw new SucursalNoEncontradaException("La sucursal '" + sucursal.getNombre() +
+                    "' no existe en el maestro de sucursales (ms-sucursales).");
+        } catch (Exception e) {
+            log.warn("No fue posible validar la sucursal '{}' (ID {}) contra ms-sucursales: {}",
+                    sucursal.getNombre(), sucursal.getId(), e.getMessage());
         }
     }
 

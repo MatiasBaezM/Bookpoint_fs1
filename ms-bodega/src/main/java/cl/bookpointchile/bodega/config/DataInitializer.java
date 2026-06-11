@@ -55,6 +55,8 @@ public class DataInitializer implements CommandLineRunner {
 
             OrdenPicking op1 = OrdenPicking.builder()
                     .ventaId(5001L) // Venta ficticia ID 5001
+                    .productoId(101L) // Introducción a los Algoritmos en Java (con stock en Bodega Central Concepción)
+                    .cantidad(2)
                     .operarioAsignado("Juan Pérez (Operario de Bodega)")
                     .estado("PENDIENTE")
                     .fechaAsignacion(LocalDateTime.now().minusHours(2))
