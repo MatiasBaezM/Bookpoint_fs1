@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: cl.bookpointchile.bodega.service.BodegaServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.802 s -- in cl.bookpointchile.bodega.service.BodegaServiceImplTest

@@ -1,0 +1,749 @@
+{
+	"info": {
+		"_postman_id": "b00kp01n-fs01-4a1d-9e2c-bookpointchile01",
+		"name": "Bookpoint Chile - Microservicios",
+		"description": "Colección de pruebas para los 10 microservicios de Bookpoint Chile.\n\nCada carpeta corresponde a un microservicio y usa una variable de base URL propia (definida en el environment 'Bookpoint - Local').\n\nLos tests validan el código de estado HTTP y, en los POST de creación, guardan IDs/folios en variables de colección para encadenar peticiones.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"event": [
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Test global aplicado a TODAS las peticiones",
+					"pm.test(\"El status es 2xx (exitoso)\", function () {",
+					"    pm.expect(pm.response.code).to.be.within(200, 299);",
+					"});",
+					"",
+					"pm.test(\"Tiempo de respuesta < 3000ms\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+					"});"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "ms-usuarios (8083)",
+			"item": [
+				{
+					"name": "POST Registrar usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.test(\"Devuelve un id\", () => pm.expect(json).to.have.property('id'));",
+									"pm.collectionVariables.set('usuarioId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rut\": \"19876543-2\",\n  \"nombre\": \"Camila Soto\",\n  \"email\": \"camila.soto@example.com\",\n  \"password\": \"Segura1234\",\n  \"rolId\": null\n}"
+						},
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/registro",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "registro"]
+						}
+					}
+				},
+				{
+					"name": "GET Usuario por id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/{{usuarioId}}",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "{{usuarioId}}"]
+						}
+					}
+				},
+				{
+					"name": "PUT Actualizar rol",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rolId\": 2\n}"
+						},
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/{{usuarioId}}/rol",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "{{usuarioId}}", "rol"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-sucursales (8090)",
+			"item": [
+				{
+					"name": "POST Crear sucursal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('sucursalId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Sucursal Centro\",\n  \"direccion\": \"Av. Libertad 1234\",\n  \"comuna\": \"Concepción\",\n  \"region\": \"Región del Biobío\",\n  \"telefono\": \"+56 41 234 5678\",\n  \"horarioAtencion\": \"Lunes a Viernes 09:00 a 18:30\",\n  \"estadoOperativo\": \"ACTIVO\"\n}"
+						},
+						"url": {
+							"raw": "{{sucursalesUrl}}/api/sucursales",
+							"host": ["{{sucursalesUrl}}"],
+							"path": ["api", "sucursales"]
+						}
+					}
+				},
+				{
+					"name": "GET Todas las sucursales",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{sucursalesUrl}}/api/sucursales",
+							"host": ["{{sucursalesUrl}}"],
+							"path": ["api", "sucursales"]
+						}
+					}
+				},
+				{
+					"name": "GET Sucursal por id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{sucursalesUrl}}/api/sucursales/{{sucursalId}}",
+							"host": ["{{sucursalesUrl}}"],
+							"path": ["api", "sucursales", "{{sucursalId}}"]
+						}
+					}
+				},
+				{
+					"name": "PUT Actualizar sucursal",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Sucursal Centro (actualizada)\",\n  \"direccion\": \"Av. Libertad 4321\",\n  \"comuna\": \"Concepción\",\n  \"region\": \"Región del Biobío\",\n  \"telefono\": \"+56 41 234 9999\",\n  \"horarioAtencion\": \"Lunes a Sábado 09:00 a 20:00\",\n  \"estadoOperativo\": \"ACTIVO\"\n}"
+						},
+						"url": {
+							"raw": "{{sucursalesUrl}}/api/sucursales/{{sucursalId}}",
+							"host": ["{{sucursalesUrl}}"],
+							"path": ["api", "sucursales", "{{sucursalId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-catalogo (8084)",
+			"item": [
+				{
+					"name": "POST Registrar producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('productoId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Cien años de soledad\",\n  \"autor\": \"Gabriel García Márquez\",\n  \"editorial\": \"Sudamericana\",\n  \"precio\": 12990,\n  \"categoria\": \"Novela\",\n  \"descripcion\": \"Edición conmemorativa de tapa dura.\"\n}"
+						},
+						"url": {
+							"raw": "{{catalogoUrl}}/api/catalogo/productos",
+							"host": ["{{catalogoUrl}}"],
+							"path": ["api", "catalogo", "productos"]
+						}
+					}
+				},
+				{
+					"name": "GET Buscar productos (filtros)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{catalogoUrl}}/api/catalogo/productos?categoria=Novela&precioMin=1000&precioMax=20000&page=0&size=10",
+							"host": ["{{catalogoUrl}}"],
+							"path": ["api", "catalogo", "productos"],
+							"query": [
+								{ "key": "autor", "value": "", "disabled": true },
+								{ "key": "editorial", "value": "", "disabled": true },
+								{ "key": "categoria", "value": "Novela" },
+								{ "key": "precioMin", "value": "1000" },
+								{ "key": "precioMax", "value": "20000" },
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Producto por id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{catalogoUrl}}/api/catalogo/productos/{{productoId}}",
+							"host": ["{{catalogoUrl}}"],
+							"path": ["api", "catalogo", "productos", "{{productoId}}"]
+						}
+					}
+				},
+				{
+					"name": "POST Agregar reseña",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"usuarioId\": 1,\n  \"usuarioNombre\": \"Camila Soto\",\n  \"calificacion\": 5,\n  \"comentario\": \"Excelente edición, muy recomendable.\"\n}"
+						},
+						"url": {
+							"raw": "{{catalogoUrl}}/api/catalogo/productos/{{productoId}}/resenas",
+							"host": ["{{catalogoUrl}}"],
+							"path": ["api", "catalogo", "productos", "{{productoId}}", "resenas"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-inventario (8082)",
+			"item": [
+				{
+					"name": "PUT Ajuste físico de stock",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productoId\": 1,\n  \"sucursalId\": 1,\n  \"cantidadAjuste\": 50,\n  \"motivo\": \"Reposición inicial de inventario\"\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/ajuste",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "ajuste"]
+						}
+					}
+				},
+				{
+					"name": "POST Traslado de stock",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productoId\": 1,\n  \"sucursalOrigenId\": 1,\n  \"sucursalDestinoId\": 2,\n  \"cantidad\": 10\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/traslado",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "traslado"]
+						}
+					}
+				},
+				{
+					"name": "GET Stock por sucursal y producto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/1/producto/1",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "1", "producto", "1"]
+						}
+					}
+				},
+				{
+					"name": "GET Stock por sucursal",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/sucursal/1",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "sucursal", "1"]
+						}
+					}
+				},
+				{
+					"name": "GET Alertas de reposición",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/alertas",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "alertas"]
+						}
+					}
+				},
+				{
+					"name": "GET Check stock (Feign)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/check-stock?productoId=1&cantidad=5",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "check-stock"],
+							"query": [
+								{ "key": "productoId", "value": "1" },
+								{ "key": "cantidad", "value": "5" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-ventas (8081)",
+			"item": [
+				{
+					"name": "POST Registrar venta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"if (json.folio) { pm.collectionVariables.set('folioVenta', json.folio); }",
+									"if (json.id) { pm.collectionVariables.set('ventaId', json.id); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipoVenta\": \"PRESENCIAL\",\n  \"clienteNombre\": \"Camila Soto\",\n  \"clienteRut\": \"19876543-2\",\n  \"asistenteNombre\": \"Pedro Vega\",\n  \"codigoDescuento\": null,\n  \"detalles\": [\n    {\n      \"productoId\": 1,\n      \"productoNombre\": \"Cien años de soledad\",\n      \"cantidad\": 2,\n      \"precioUnitario\": 12990\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas"]
+						}
+					}
+				},
+				{
+					"name": "GET Venta por folio",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas/{{folioVenta}}",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas", "{{folioVenta}}"]
+						}
+					}
+				},
+				{
+					"name": "GET Todas las ventas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-facturacion (8088)",
+			"item": [
+				{
+					"name": "POST Emitir documento (BOLETA)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"folioVenta\": \"{{folioVenta}}\",\n  \"rutCliente\": \"19876543-2\",\n  \"razonSocial\": null,\n  \"giro\": null,\n  \"tipoDocumento\": \"BOLETA\",\n  \"montoNeto\": 21824.37\n}"
+						},
+						"url": {
+							"raw": "{{facturacionUrl}}/api/facturacion/emitir",
+							"host": ["{{facturacionUrl}}"],
+							"path": ["api", "facturacion", "emitir"]
+						}
+					}
+				},
+				{
+					"name": "POST Emitir documento (FACTURA)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"folioVenta\": \"{{folioVenta}}\",\n  \"rutCliente\": \"76543210-K\",\n  \"razonSocial\": \"Librería del Sur SpA\",\n  \"giro\": \"Venta de libros\",\n  \"tipoDocumento\": \"FACTURA\",\n  \"montoNeto\": 21824.37\n}"
+						},
+						"url": {
+							"raw": "{{facturacionUrl}}/api/facturacion/emitir",
+							"host": ["{{facturacionUrl}}"],
+							"path": ["api", "facturacion", "emitir"]
+						}
+					}
+				},
+				{
+					"name": "GET Documento por folio de venta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{facturacionUrl}}/api/facturacion/venta/{{folioVenta}}",
+							"host": ["{{facturacionUrl}}"],
+							"path": ["api", "facturacion", "venta", "{{folioVenta}}"]
+						}
+					}
+				},
+				{
+					"name": "GET Todos los documentos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{facturacionUrl}}/api/facturacion",
+							"host": ["{{facturacionUrl}}"],
+							"path": ["api", "facturacion"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-promociones (8087)",
+			"item": [
+				{
+					"name": "POST Registrar promoción",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"DESCUENTO10\",\n  \"porcentajeDescuento\": 10,\n  \"fechaInicio\": \"2026-06-01\",\n  \"fechaFin\": \"2026-12-31\",\n  \"estado\": \"ACTIVO\"\n}"
+						},
+						"url": {
+							"raw": "{{promocionesUrl}}/api/promociones",
+							"host": ["{{promocionesUrl}}"],
+							"path": ["api", "promociones"]
+						}
+					}
+				},
+				{
+					"name": "GET Todas las promociones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{promocionesUrl}}/api/promociones",
+							"host": ["{{promocionesUrl}}"],
+							"path": ["api", "promociones"]
+						}
+					}
+				},
+				{
+					"name": "GET Validar promoción por código",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{promocionesUrl}}/api/promociones/validar/DESCUENTO10",
+							"host": ["{{promocionesUrl}}"],
+							"path": ["api", "promociones", "validar", "DESCUENTO10"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-proveedores (8086)",
+			"item": [
+				{
+					"name": "POST Registrar proveedor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('proveedorId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rut\": \"96543210-1\",\n  \"razonSocial\": \"Distribuidora de Libros Andes Ltda.\",\n  \"emailContacto\": \"ventas@andeslibros.cl\",\n  \"telefono\": \"+56 2 2345 6789\"\n}"
+						},
+						"url": {
+							"raw": "{{proveedoresUrl}}/api/proveedores",
+							"host": ["{{proveedoresUrl}}"],
+							"path": ["api", "proveedores"]
+						}
+					}
+				},
+				{
+					"name": "GET Todos los proveedores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{proveedoresUrl}}/api/proveedores",
+							"host": ["{{proveedoresUrl}}"],
+							"path": ["api", "proveedores"]
+						}
+					}
+				},
+				{
+					"name": "POST Emitir orden de compra",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('ordenCompraId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"proveedorId\": {{proveedorId}},\n  \"detalles\": [\n    {\n      \"productoId\": 1,\n      \"cantidadSolicitada\": 100,\n      \"costoUnitario\": 6500\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{proveedoresUrl}}/api/proveedores/ordenes",
+							"host": ["{{proveedoresUrl}}"],
+							"path": ["api", "proveedores", "ordenes"]
+						}
+					}
+				},
+				{
+					"name": "PUT Registrar recepción de mercadería",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{proveedoresUrl}}/api/proveedores/ordenes/{{ordenCompraId}}/recepcion",
+							"host": ["{{proveedoresUrl}}"],
+							"path": ["api", "proveedores", "ordenes", "{{ordenCompraId}}", "recepcion"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-logistica (8085)",
+			"item": [
+				{
+					"name": "POST Crear envío",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('envioId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": 1,\n  \"direccionDestino\": \"Calle Las Heras 567, Concepción\",\n  \"rutaId\": null\n}"
+						},
+						"url": {
+							"raw": "{{logisticaUrl}}/api/logistica/envios",
+							"host": ["{{logisticaUrl}}"],
+							"path": ["api", "logistica", "envios"]
+						}
+					}
+				},
+				{
+					"name": "PUT Actualizar estado de envío",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"EN_RUTA\"\n}"
+						},
+						"url": {
+							"raw": "{{logisticaUrl}}/api/logistica/envios/{{envioId}}/estado",
+							"host": ["{{logisticaUrl}}"],
+							"path": ["api", "logistica", "envios", "{{envioId}}", "estado"]
+						}
+					}
+				},
+				{
+					"name": "GET Envío por ventaId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{logisticaUrl}}/api/logistica/envios/venta/1",
+							"host": ["{{logisticaUrl}}"],
+							"path": ["api", "logistica", "envios", "venta", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "ms-bodega (8089)",
+			"item": [
+				{
+					"name": "POST Registrar ubicación",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pasillo\": \"A\",\n  \"estante\": \"03\",\n  \"nivel\": \"2\",\n  \"codigoBarras\": \"7801234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/ubicaciones",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "ubicaciones"]
+						}
+					}
+				},
+				{
+					"name": "POST Crear orden de picking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('pickingId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": 1,\n  \"productoId\": 1,\n  \"cantidad\": 2,\n  \"operarioAsignado\": \"Juan Pérez\"\n}"
+						},
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/picking",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "picking"]
+						}
+					}
+				},
+				{
+					"name": "PUT Actualizar estado de picking",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/picking/{{pickingId}}/estado?estado=COMPLETADO",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "picking", "{{pickingId}}", "estado"],
+							"query": [{ "key": "estado", "value": "COMPLETADO" }]
+						}
+					}
+				},
+				{
+					"name": "GET Ubicaciones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/ubicaciones",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "ubicaciones"]
+						}
+					}
+				},
+				{
+					"name": "GET Órdenes de picking",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/picking",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "picking"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "usuarioId", "value": "1" },
+		{ "key": "sucursalId", "value": "1" },
+		{ "key": "productoId", "value": "1" },
+		{ "key": "ventaId", "value": "1" },
+		{ "key": "folioVenta", "value": "" },
+		{ "key": "proveedorId", "value": "1" },
+		{ "key": "ordenCompraId", "value": "1" },
+		{ "key": "envioId", "value": "1" },
+		{ "key": "pickingId", "value": "1" }
+	]
+}

@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: cl.bookpointchile.facturacion.service.FacturacionServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.424 s -- in cl.bookpointchile.facturacion.service.FacturacionServiceImplTest
