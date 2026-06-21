@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>cl.bookpointchile</groupId>
+    <artifactId>bookpoint-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>bookpoint-parent</name>
+
+    <modules>
+        <module>ms-bodega</module>
+        <module>ms-catalogo</module>
+        <module>ms-facturacion</module>
+        <module>ms-inventario</module>
+        <module>ms-logistica</module>
+        <module>ms-promociones</module>
+        <module>ms-proveedores</module>
+        <module>ms-sucursales</module>
+        <module>ms-usuarios</module>
+        <module>ms-ventas</module>
+        <module>ms-gateway</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+</project>

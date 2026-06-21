@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: cl.bookpointchile.proveedores.controller.ProveedoresControllerTest
--------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.339 s -- in cl.bookpointchile.proveedores.controller.ProveedoresControllerTest

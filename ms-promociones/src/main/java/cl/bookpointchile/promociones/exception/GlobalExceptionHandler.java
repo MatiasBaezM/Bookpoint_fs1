@@ -27,6 +27,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(PromocionYaExisteException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicatePromotion(PromocionYaExisteException ex, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Conflict")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(PromocionCaducadaException.class)
     public ResponseEntity<ErrorResponse> handleExpiredPromotion(PromocionCaducadaException ex, HttpServletRequest request) {
         ErrorResponse error = ErrorResponse.builder()

@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: cl.bookpointchile.catalogo.service.CatalogoServiceImplTest
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.645 s -- in cl.bookpointchile.catalogo.service.CatalogoServiceImplTest
