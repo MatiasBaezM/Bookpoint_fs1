@@ -4,6 +4,7 @@ import cl.bookpointchile.promociones.dto.CrearPromocionRequestDTO;
 import cl.bookpointchile.promociones.dto.PromocionResponseDTO;
 import cl.bookpointchile.promociones.exception.PromocionCaducadaException;
 import cl.bookpointchile.promociones.exception.PromocionNoEncontradaException;
+import cl.bookpointchile.promociones.exception.PromocionYaExisteException;
 import cl.bookpointchile.promociones.model.Promocion;
 import cl.bookpointchile.promociones.repository.PromocionRepository;
 
@@ -65,7 +66,7 @@ class PromocionesServiceImplTest {
                 .fechaInicio(LocalDate.now()).fechaFin(LocalDate.now().plusDays(30)).build();
         when(promocionRepository.existsByCodigoIgnoreCase("DESCUENTO10")).thenReturn(true);
 
-        assertThrows(PromocionCaducadaException.class,
+        assertThrows(PromocionYaExisteException.class,
                 () -> promocionesService.registrarPromocion(request));
         verify(promocionRepository, never()).save(any());
     }

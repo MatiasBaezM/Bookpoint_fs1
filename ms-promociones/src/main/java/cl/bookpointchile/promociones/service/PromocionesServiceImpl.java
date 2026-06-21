@@ -4,6 +4,7 @@ import cl.bookpointchile.promociones.dto.CrearPromocionRequestDTO;
 import cl.bookpointchile.promociones.dto.PromocionResponseDTO;
 import cl.bookpointchile.promociones.exception.PromocionCaducadaException;
 import cl.bookpointchile.promociones.exception.PromocionNoEncontradaException;
+import cl.bookpointchile.promociones.exception.PromocionYaExisteException;
 import cl.bookpointchile.promociones.model.Promocion;
 import cl.bookpointchile.promociones.repository.PromocionRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class PromocionesServiceImpl implements PromocionesService {
 
         if (promocionRepository.existsByCodigoIgnoreCase(codigoUpper)) {
             log.warn("Registro rechazado: Promoción con código '{}' ya existe.", codigoUpper);
-            throw new PromocionCaducadaException("La promoción con el código '" + request.getCodigo() + "' ya se encuentra registrada.");
+            throw new PromocionYaExisteException("La promoción con el código '" + request.getCodigo() + "' ya se encuentra registrada.");
         }
 
         Promocion promocion = Promocion.builder()
