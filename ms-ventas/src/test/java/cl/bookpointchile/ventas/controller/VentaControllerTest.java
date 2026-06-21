@@ -123,4 +123,16 @@ class VentaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].folio").value("BP-ONL-0001"));
     }
+
+    @Test
+    void obtenerVentasPorUsuario_retorna200() throws Exception {
+        VentaResponseDTO response = VentaResponseDTO.builder()
+                .id(1L).folio("BP-ONL-0001").tipoVenta(TipoVenta.ONLINE).usuarioId(5L).build();
+
+        Mockito.when(ventaService.obtenerVentasPorUsuario(5L)).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/api/ventas/usuario/5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].usuarioId").value(5));
+    }
 }

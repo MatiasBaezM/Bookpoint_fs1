@@ -9,4 +9,5 @@ public interface VentaService {
     VentaResponseDTO registrarVenta(VentaRequestDTO request);
     VentaResponseDTO obtenerVentaPorFolio(String folio);
     List<VentaResponseDTO> obtenerTodas();
+    List<VentaResponseDTO> obtenerVentasPorUsuario(Long usuarioId);
 }

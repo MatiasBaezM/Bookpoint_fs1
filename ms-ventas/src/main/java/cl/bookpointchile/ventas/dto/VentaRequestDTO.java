@@ -20,6 +20,7 @@ public class VentaRequestDTO {
     @NotNull(message = "El tipo de venta (PRESENCIAL o ONLINE) es obligatorio")
     private TipoVenta tipoVenta;
 
+    private Long usuarioId; // ID del usuario registrado (opcional; si se provee, se obtienen nombre y RUT automáticamente)
     private String clienteNombre;
     private String clienteRut;
     private String asistenteNombre; // Obligatorio para ventas presenciales en caja

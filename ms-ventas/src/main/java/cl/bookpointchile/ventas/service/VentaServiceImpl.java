@@ -3,6 +3,7 @@ package cl.bookpointchile.ventas.service;
 import cl.bookpointchile.ventas.client.FacturacionClient;
 import cl.bookpointchile.ventas.client.InventarioClient;
 import cl.bookpointchile.ventas.client.PromocionClient;
+import cl.bookpointchile.ventas.client.UsuarioClient;
 import cl.bookpointchile.ventas.dto.*;
 import cl.bookpointchile.ventas.exception.InsufficientStockException;
 import cl.bookpointchile.ventas.exception.InvalidSaleException;
@@ -38,6 +39,7 @@ public class VentaServiceImpl implements VentaService {
     private final InventarioClient inventarioClient;
     private final PromocionClient promocionClient;
     private final FacturacionClient facturacionClient;
+    private final UsuarioClient usuarioClient;
 
     @Override
     @Transactional
@@ -52,7 +54,31 @@ public class VentaServiceImpl implements VentaService {
             throw new InvalidSaleException("Para ventas presenciales en caja es obligatorio ingresar el nombre del asistente de ventas.");
         }
 
-        // 2. Verificación de Stock en Tiempo Real (Síncrono vía Feign con ms-inventario)
+        // 2. Resolución del cliente registrado (opcional vía usuarioId → ms-usuarios)
+        String clienteNombreResuelto = request.getClienteNombre();
+        String clienteRutResuelto = request.getClienteRut();
+
+        if (request.getUsuarioId() != null) {
+            try {
+                UsuarioResponseDTO usuario = usuarioClient.obtenerUsuarioPorId(request.getUsuarioId());
+                if (!"ACTIVO".equalsIgnoreCase(usuario.getEstado())) {
+                    throw new InvalidSaleException("El usuario con ID " + request.getUsuarioId() + " no está activo.");
+                }
+                // Los datos del usuario registrado tienen prioridad sobre los campos manuales
+                clienteNombreResuelto = usuario.getNombre();
+                clienteRutResuelto = usuario.getRut();
+                log.info("Cliente registrado resuelto: {} (RUT: {})", clienteNombreResuelto, clienteRutResuelto);
+            } catch (InvalidSaleException e) {
+                throw e;
+            } catch (FeignException.NotFound e) {
+                throw new InvalidSaleException("No existe un usuario registrado con ID " + request.getUsuarioId() + ".");
+            } catch (FeignException e) {
+                log.error("No fue posible verificar el usuario ID {} con ms-usuarios: {}", request.getUsuarioId(), e.getMessage());
+                throw new InvalidSaleException("No fue posible verificar el usuario. Intente nuevamente más tarde.");
+            }
+        }
+
+        // 3. Verificación de Stock en Tiempo Real (Síncrono vía Feign con ms-inventario)
         for (DetalleVentaRequestDTO item : request.getDetalles()) {
             StockResponseDTO stock = inventarioClient.checkStock(item.getProductoId(), item.getCantidad());
             if (!stock.isDisponible()) {
@@ -111,8 +137,9 @@ public class VentaServiceImpl implements VentaService {
                 .folio(folioUnico)
                 .fecha(LocalDateTime.now())
                 .tipoVenta(request.getTipoVenta())
-                .clienteNombre(request.getClienteNombre())
-                .clienteRut(request.getClienteRut())
+                .usuarioId(request.getUsuarioId())
+                .clienteNombre(clienteNombreResuelto)
+                .clienteRut(clienteRutResuelto)
                 .asistenteNombre(request.getTipoVenta() == TipoVenta.PRESENCIAL ? request.getAsistenteNombre() : null)
                 .subtotal(subtotal)
                 .descuentoAplicado(descuento)
@@ -195,6 +222,15 @@ public class VentaServiceImpl implements VentaService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<VentaResponseDTO> obtenerVentasPorUsuario(Long usuarioId) {
+        log.info("Buscando historial de ventas para usuario ID: {}", usuarioId);
+        return ventaRepository.findByUsuarioId(usuarioId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     // Mapper manual Helper para mantener el diseño CSR libre de acoplamientos pesados
     private VentaResponseDTO mapToResponse(Venta venta) {
         List<DetalleVentaResponseDTO> detalleDTOs = venta.getDetalles().stream()
@@ -214,6 +250,7 @@ public class VentaServiceImpl implements VentaService {
                 .fecha(venta.getFecha())
                 .tipoVenta(venta.getTipoVenta())
                 .estado(venta.getEstado())
+                .usuarioId(venta.getUsuarioId())
                 .clienteNombre(venta.getClienteNombre())
                 .clienteRut(venta.getClienteRut())
                 .asistenteNombre(venta.getAsistenteNombre())

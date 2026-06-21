@@ -36,6 +36,9 @@ public class Venta {
     @Builder.Default
     private EstadoVenta estado = EstadoVenta.PENDIENTE;
 
+    @Column(name = "usuario_id")
+    private Long usuarioId;
+
     @Column(name = "cliente_nombre", length = 100)
     private String clienteNombre;
 

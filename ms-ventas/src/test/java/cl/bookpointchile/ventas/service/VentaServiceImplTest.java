@@ -3,10 +3,12 @@ package cl.bookpointchile.ventas.service;
 import cl.bookpointchile.ventas.client.FacturacionClient;
 import cl.bookpointchile.ventas.client.InventarioClient;
 import cl.bookpointchile.ventas.client.PromocionClient;
+import cl.bookpointchile.ventas.client.UsuarioClient;
 import cl.bookpointchile.ventas.dto.*;
 import cl.bookpointchile.ventas.exception.InsufficientStockException;
 import cl.bookpointchile.ventas.exception.InvalidSaleException;
 import cl.bookpointchile.ventas.exception.ResourceNotFoundException;
+import feign.FeignException;
 import cl.bookpointchile.ventas.model.TipoDescuento;
 import cl.bookpointchile.ventas.model.TipoVenta;
 import cl.bookpointchile.ventas.model.Venta;
@@ -40,6 +42,8 @@ class VentaServiceImplTest {
     private PromocionClient promocionClient;
     @Mock
     private FacturacionClient facturacionClient;
+    @Mock
+    private UsuarioClient usuarioClient;
 
     @InjectMocks
     private VentaServiceImpl ventaService;
@@ -194,5 +198,86 @@ class VentaServiceImplTest {
         assertEquals(1, response.size());
         assertEquals("BP-ONL-0001", response.get(0).getFolio());
         verify(ventaRepository, times(1)).findAll();
+    }
+
+    @Test
+    void registrarVentaConUsuarioRegistrado_resuelveNombreYRut() {
+        // Given
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .usuarioId(5L)
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(usuarioClient.obtenerUsuarioPorId(5L)).thenReturn(
+                UsuarioResponseDTO.builder().id(5L).nombre("Ana López").rut("12345678-9").estado("ACTIVO").build());
+        when(inventarioClient.checkStock(1L, 1)).thenReturn(stockDisponible());
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
+            Venta v = inv.getArgument(0);
+            v.setId(10L);
+            return v;
+        });
+
+        // When
+        VentaResponseDTO response = ventaService.registrarVenta(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(5L, response.getUsuarioId());
+        assertEquals("Ana López", response.getClienteNombre());
+        assertEquals("12345678-9", response.getClienteRut());
+    }
+
+    @Test
+    void registrarVentaConUsuarioInactivo_lanzaInvalidSale() {
+        // Given
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .usuarioId(7L)
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(usuarioClient.obtenerUsuarioPorId(7L)).thenReturn(
+                UsuarioResponseDTO.builder().id(7L).nombre("Carlos").rut("99999999-9").estado("INACTIVO").build());
+
+        // When + Then
+        assertThrows(InvalidSaleException.class, () -> ventaService.registrarVenta(request));
+        verify(ventaRepository, never()).save(any(Venta.class));
+    }
+
+    @Test
+    void registrarVentaConUsuarioInexistente_lanzaInvalidSale() {
+        // Given
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .usuarioId(999L)
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(usuarioClient.obtenerUsuarioPorId(999L))
+                .thenThrow(FeignException.NotFound.class);
+
+        // When + Then
+        assertThrows(InvalidSaleException.class, () -> ventaService.registrarVenta(request));
+        verify(ventaRepository, never()).save(any(Venta.class));
+    }
+
+    @Test
+    void obtenerVentasPorUsuario_retornaHistorial() {
+        // Given
+        Venta venta = Venta.builder()
+                .id(1L).folio("BP-ONL-0001").tipoVenta(TipoVenta.ONLINE).usuarioId(5L)
+                .subtotal(new BigDecimal("5000")).total(new BigDecimal("5000"))
+                .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
+                .build();
+        when(ventaRepository.findByUsuarioId(5L)).thenReturn(List.of(venta));
+
+        // When
+        List<VentaResponseDTO> response = ventaService.obtenerVentasPorUsuario(5L);
+
+        // Then
+        assertEquals(1, response.size());
+        assertEquals(5L, response.get(0).getUsuarioId());
+        verify(ventaRepository, times(1)).findByUsuarioId(5L);
     }
 }

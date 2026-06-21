@@ -36,4 +36,10 @@ public class VentaController {
         List<VentaResponseDTO> response = ventaService.obtenerTodas();
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<VentaResponseDTO>> obtenerVentasPorUsuario(@PathVariable Long usuarioId) {
+        List<VentaResponseDTO> response = ventaService.obtenerVentasPorUsuario(usuarioId);
+        return ResponseEntity.ok(response);
+    }
 }
