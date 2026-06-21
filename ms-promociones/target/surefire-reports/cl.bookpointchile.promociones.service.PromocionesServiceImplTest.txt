@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: cl.bookpointchile.promociones.service.PromocionesServiceImplTest
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.387 s -- in cl.bookpointchile.promociones.service.PromocionesServiceImplTest

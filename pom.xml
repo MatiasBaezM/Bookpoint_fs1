@@ -18,6 +18,7 @@
         <module>ms-sucursales</module>
         <module>ms-usuarios</module>
         <module>ms-ventas</module>
+        <module>ms-gateway</module>
     </modules>
 
     <properties>
