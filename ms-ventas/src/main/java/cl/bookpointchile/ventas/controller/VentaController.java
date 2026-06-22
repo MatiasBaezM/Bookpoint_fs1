@@ -22,7 +22,7 @@ public class VentaController {
     @PostMapping
     public ResponseEntity<VentaResponseDTO> registrarVenta(@Valid @RequestBody VentaRequestDTO request) {
         VentaResponseDTO response = ventaService.registrarVenta(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/{folio}")

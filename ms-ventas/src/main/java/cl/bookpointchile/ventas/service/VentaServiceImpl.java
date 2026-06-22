@@ -1,11 +1,9 @@
 package cl.bookpointchile.ventas.service;
 
 import cl.bookpointchile.ventas.client.FacturacionClient;
-import cl.bookpointchile.ventas.client.InventarioClient;
 import cl.bookpointchile.ventas.client.PromocionClient;
 import cl.bookpointchile.ventas.client.UsuarioClient;
 import cl.bookpointchile.ventas.dto.*;
-import cl.bookpointchile.ventas.exception.InsufficientStockException;
 import cl.bookpointchile.ventas.exception.InvalidSaleException;
 import cl.bookpointchile.ventas.exception.ResourceNotFoundException;
 import cl.bookpointchile.ventas.model.*;
@@ -36,7 +34,6 @@ public class VentaServiceImpl implements VentaService {
 
     private final VentaRepository ventaRepository;
     private final RabbitTemplate rabbitTemplate;
-    private final InventarioClient inventarioClient;
     private final PromocionClient promocionClient;
     private final FacturacionClient facturacionClient;
     private final UsuarioClient usuarioClient;
@@ -44,7 +41,7 @@ public class VentaServiceImpl implements VentaService {
     @Override
     @Transactional
     public VentaResponseDTO registrarVenta(VentaRequestDTO request) {
-        log.info("Iniciando registro de venta. Tipo: {}, Canal: {}", 
+        log.info("Iniciando registro de venta de forma asíncrona. Tipo: {}, Canal: {}", 
                 request.getTipoVenta(), request.getTipoVenta() == TipoVenta.PRESENCIAL ? "Caja" : "Online");
 
         // 1. Validaciones de Negocio Específicas
@@ -75,18 +72,6 @@ public class VentaServiceImpl implements VentaService {
             } catch (FeignException e) {
                 log.error("No fue posible verificar el usuario ID {} con ms-usuarios: {}", request.getUsuarioId(), e.getMessage());
                 throw new InvalidSaleException("No fue posible verificar el usuario. Intente nuevamente más tarde.");
-            }
-        }
-
-        // 3. Verificación de Stock en Tiempo Real (Síncrono vía Feign con ms-inventario)
-        for (DetalleVentaRequestDTO item : request.getDetalles()) {
-            StockResponseDTO stock = inventarioClient.checkStock(item.getProductoId(), item.getCantidad());
-            if (!stock.isDisponible()) {
-                log.warn("Stock insuficiente para el producto ID {}. Disponible: {}, Solicitado: {}",
-                        item.getProductoId(), stock.getStockActual(), item.getCantidad());
-                throw new InsufficientStockException("Stock insuficiente para el producto '" + item.getProductoNombre() +
-                        "' (ID " + item.getProductoId() + "). Disponible: " + stock.getStockActual() +
-                        ", Solicitado: " + item.getCantidad());
             }
         }
 
@@ -231,7 +216,6 @@ public class VentaServiceImpl implements VentaService {
                 .collect(Collectors.toList());
     }
 
-    // Mapper manual Helper para mantener el diseño CSR libre de acoplamientos pesados
     private VentaResponseDTO mapToResponse(Venta venta) {
         List<DetalleVentaResponseDTO> detalleDTOs = venta.getDetalles().stream()
                 .map(d -> DetalleVentaResponseDTO.builder()

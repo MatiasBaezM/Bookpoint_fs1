@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockRechazadoEvent implements Serializable {
+public class StockRechazadoEvent {
     private Long ventaId;
     private String folio;
     private String motivo;

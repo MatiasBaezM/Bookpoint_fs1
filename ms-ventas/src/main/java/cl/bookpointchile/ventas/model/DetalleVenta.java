@@ -1,13 +1,11 @@
 package cl.bookpointchile.ventas.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "detalles_venta")
+@Table(name = "detalle_ventas")
 @Getter
 @Setter
 @Builder
@@ -21,7 +19,6 @@ public class DetalleVenta {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venta_id", nullable = false)
-    @JsonIgnore
     private Venta venta;
 
     @Column(name = "producto_id", nullable = false)

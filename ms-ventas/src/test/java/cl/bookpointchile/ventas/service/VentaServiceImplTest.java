@@ -1,19 +1,19 @@
 package cl.bookpointchile.ventas.service;
 
 import cl.bookpointchile.ventas.client.FacturacionClient;
-import cl.bookpointchile.ventas.client.InventarioClient;
 import cl.bookpointchile.ventas.client.PromocionClient;
 import cl.bookpointchile.ventas.client.UsuarioClient;
 import cl.bookpointchile.ventas.dto.*;
-import cl.bookpointchile.ventas.exception.InsufficientStockException;
 import cl.bookpointchile.ventas.exception.InvalidSaleException;
 import cl.bookpointchile.ventas.exception.ResourceNotFoundException;
-import feign.FeignException;
+import cl.bookpointchile.ventas.model.EstadoVenta;
 import cl.bookpointchile.ventas.model.TipoDescuento;
 import cl.bookpointchile.ventas.model.TipoVenta;
 import cl.bookpointchile.ventas.model.Venta;
 import cl.bookpointchile.ventas.repository.VentaRepository;
-
+import cl.bookpointchile.ventas.config.RabbitMQConfig;
+import cl.bookpointchile.ventas.event.VentaCreadaEvent;
+import feign.FeignException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,8 +37,6 @@ class VentaServiceImplTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
     @Mock
-    private InventarioClient inventarioClient;
-    @Mock
     private PromocionClient promocionClient;
     @Mock
     private FacturacionClient facturacionClient;
@@ -48,7 +46,6 @@ class VentaServiceImplTest {
     @InjectMocks
     private VentaServiceImpl ventaService;
 
-    // ---------- Helpers ----------
     private DetalleVentaRequestDTO detalle(int cantidad, String precio) {
         return DetalleVentaRequestDTO.builder()
                 .productoId(1L)
@@ -58,14 +55,8 @@ class VentaServiceImplTest {
                 .build();
     }
 
-    private StockResponseDTO stockDisponible() {
-        return StockResponseDTO.builder().productoId(1L).disponible(true).stockActual(50).build();
-    }
-
-    // ---------- registrarVenta ----------
-
     @Test
-    void registrarVentaPresencialSinDescuento_calculaTotalYGuarda() {
+    void registrarVentaPresencialSinDescuento_calculaTotalYGuardaComoPendiente_Y_PublicaEvento() {
         // Given
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.PRESENCIAL)
@@ -75,7 +66,6 @@ class VentaServiceImplTest {
                 .detalles(List.of(detalle(2, "12990")))
                 .build();
 
-        when(inventarioClient.checkStock(1L, 2)).thenReturn(stockDisponible());
         when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
             Venta v = inv.getArgument(0);
             v.setId(1L);
@@ -89,10 +79,16 @@ class VentaServiceImplTest {
         assertNotNull(response);
         assertEquals(new BigDecimal("25980.00"), response.getTotal());
         assertEquals(TipoDescuento.NINGUNO, response.getTipoDescuento());
+        assertEquals(EstadoVenta.PENDIENTE, response.getEstado());
         assertTrue(response.getFolio().startsWith("BP-PRE-"));
+        
+        // Verificaciones Mockito
         verify(ventaRepository, times(1)).save(any(Venta.class));
-        // Se emite el evento VentaCreada a RabbitMQ
-        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), any(Object.class));
+        verify(rabbitTemplate, times(1)).convertAndSend(
+                eq(RabbitMQConfig.EXCHANGE_VENTAS), 
+                eq(RabbitMQConfig.ROUTING_KEY_VENTA_CREADA), 
+                any(VentaCreadaEvent.class)
+        );
     }
 
     @Test
@@ -107,35 +103,18 @@ class VentaServiceImplTest {
         // When + Then
         assertThrows(InvalidSaleException.class, () -> ventaService.registrarVenta(request));
         verify(ventaRepository, never()).save(any(Venta.class));
-        verifyNoInteractions(inventarioClient);
+        verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
-    void registrarVentaSinStock_lanzaInsufficientStock() {
+    void registrarVentaConCuponValido_aplicaDescuentoYGuardaComoPendiente() {
         // Given
-        VentaRequestDTO request = VentaRequestDTO.builder()
-                .tipoVenta(TipoVenta.ONLINE)
-                .detalles(List.of(detalle(5, "10000")))
-                .build();
-        StockResponseDTO sinStock = StockResponseDTO.builder()
-                .productoId(1L).disponible(false).stockActual(2).build();
-        when(inventarioClient.checkStock(1L, 5)).thenReturn(sinStock);
-
-        // When + Then
-        assertThrows(InsufficientStockException.class, () -> ventaService.registrarVenta(request));
-        verify(ventaRepository, never()).save(any(Venta.class));
-    }
-
-    @Test
-    void registrarVentaConCuponValido_aplicaDescuento() {
-        // Given (10% de descuento sobre 20000 = 2000 -> total 18000)
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.ONLINE)
                 .codigoDescuento("DESCUENTO10")
                 .detalles(List.of(detalle(2, "10000")))
                 .build();
 
-        when(inventarioClient.checkStock(1L, 2)).thenReturn(stockDisponible());
         when(promocionClient.validarPromocion("DESCUENTO10"))
                 .thenReturn(PromocionResponseDTO.builder()
                         .codigo("DESCUENTO10").porcentajeDescuento(10).vigente(true).build());
@@ -152,6 +131,12 @@ class VentaServiceImplTest {
         assertEquals(new BigDecimal("2000.00"), response.getDescuentoAplicado());
         assertEquals(new BigDecimal("18000.00"), response.getTotal());
         assertEquals(TipoDescuento.CUPON, response.getTipoDescuento());
+        assertEquals(EstadoVenta.PENDIENTE, response.getEstado());
+        verify(rabbitTemplate, times(1)).convertAndSend(
+                eq(RabbitMQConfig.EXCHANGE_VENTAS), 
+                eq(RabbitMQConfig.ROUTING_KEY_VENTA_CREADA), 
+                any(VentaCreadaEvent.class)
+        );
     }
 
     @Test
@@ -161,6 +146,7 @@ class VentaServiceImplTest {
                 .id(1L).folio("BP-PRE-ABCD1234").tipoVenta(TipoVenta.PRESENCIAL)
                 .subtotal(new BigDecimal("10000")).total(new BigDecimal("10000"))
                 .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
+                .estado(EstadoVenta.PENDIENTE)
                 .build();
         when(ventaRepository.findByFolio("BP-PRE-ABCD1234")).thenReturn(Optional.of(venta));
 
@@ -188,6 +174,7 @@ class VentaServiceImplTest {
                 .id(1L).folio("BP-ONL-0001").tipoVenta(TipoVenta.ONLINE)
                 .subtotal(new BigDecimal("5000")).total(new BigDecimal("5000"))
                 .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
+                .estado(EstadoVenta.PENDIENTE)
                 .build();
         when(ventaRepository.findAll()).thenReturn(List.of(venta));
 
@@ -211,7 +198,6 @@ class VentaServiceImplTest {
 
         when(usuarioClient.obtenerUsuarioPorId(5L)).thenReturn(
                 UsuarioResponseDTO.builder().id(5L).nombre("Ana López").rut("12345678-9").estado("ACTIVO").build());
-        when(inventarioClient.checkStock(1L, 1)).thenReturn(stockDisponible());
         when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
             Venta v = inv.getArgument(0);
             v.setId(10L);
@@ -226,6 +212,12 @@ class VentaServiceImplTest {
         assertEquals(5L, response.getUsuarioId());
         assertEquals("Ana López", response.getClienteNombre());
         assertEquals("12345678-9", response.getClienteRut());
+        assertEquals(EstadoVenta.PENDIENTE, response.getEstado());
+        verify(rabbitTemplate, times(1)).convertAndSend(
+                eq(RabbitMQConfig.EXCHANGE_VENTAS), 
+                eq(RabbitMQConfig.ROUTING_KEY_VENTA_CREADA), 
+                any(VentaCreadaEvent.class)
+        );
     }
 
     @Test
@@ -243,6 +235,7 @@ class VentaServiceImplTest {
         // When + Then
         assertThrows(InvalidSaleException.class, () -> ventaService.registrarVenta(request));
         verify(ventaRepository, never()).save(any(Venta.class));
+        verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
@@ -260,6 +253,7 @@ class VentaServiceImplTest {
         // When + Then
         assertThrows(InvalidSaleException.class, () -> ventaService.registrarVenta(request));
         verify(ventaRepository, never()).save(any(Venta.class));
+        verifyNoInteractions(rabbitTemplate);
     }
 
     @Test
@@ -269,6 +263,7 @@ class VentaServiceImplTest {
                 .id(1L).folio("BP-ONL-0001").tipoVenta(TipoVenta.ONLINE).usuarioId(5L)
                 .subtotal(new BigDecimal("5000")).total(new BigDecimal("5000"))
                 .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
+                .estado(EstadoVenta.PENDIENTE)
                 .build();
         when(ventaRepository.findByUsuarioId(5L)).thenReturn(List.of(venta));
 

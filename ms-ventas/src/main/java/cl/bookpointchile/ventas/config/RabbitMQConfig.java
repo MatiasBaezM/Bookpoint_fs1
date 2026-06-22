@@ -9,17 +9,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String EXCHANGE_VENTAS = "exchange.ventas";
-    public static final String QUEUE_STOCK_RESERVADO = "queue.venta.stock.reservado";
-    public static final String QUEUE_STOCK_RECHAZADO = "queue.venta.stock.rechazado";
-    
-    public static final String ROUTING_KEY_VENTA_CREADA = "routing.venta.creada";
-    public static final String ROUTING_KEY_STOCK_RESERVADO = "routing.stock.reservado";
-    public static final String ROUTING_KEY_STOCK_RECHAZADO = "routing.stock.rechazado";
+    public static final String EXCHANGE_VENTAS = "ventas.exchange";
+
+    public static final String QUEUE_VENTA_CREADA = "venta.creada.queue";
+    public static final String QUEUE_STOCK_RESERVADO = "stock.reservado.queue";
+    public static final String QUEUE_STOCK_RECHAZADO = "stock.rechazado.queue";
+
+    public static final String ROUTING_KEY_VENTA_CREADA = "venta.creada";
+    public static final String ROUTING_KEY_STOCK_RESERVADO = "stock.reservado";
+    public static final String ROUTING_KEY_STOCK_RECHAZADO = "stock.rechazado";
 
     @Bean
-    public TopicExchange exchange() {
+    public TopicExchange ventasExchange() {
         return new TopicExchange(EXCHANGE_VENTAS);
+    }
+
+    @Bean
+    public Queue ventaCreadaQueue() {
+        return new Queue(QUEUE_VENTA_CREADA, true);
     }
 
     @Bean
@@ -33,17 +40,22 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding stockReservadoBinding(Queue stockReservadoQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(stockReservadoQueue).to(exchange).with(ROUTING_KEY_STOCK_RESERVADO);
+    public Binding bindingVentaCreada(Queue ventaCreadaQueue, TopicExchange ventasExchange) {
+        return BindingBuilder.bind(ventaCreadaQueue).to(ventasExchange).with(ROUTING_KEY_VENTA_CREADA);
     }
 
     @Bean
-    public Binding stockRechazadoBinding(Queue stockRechazadoQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(stockRechazadoQueue).to(exchange).with(ROUTING_KEY_STOCK_RECHAZADO);
+    public Binding bindingStockReservado(Queue stockReservadoQueue, TopicExchange ventasExchange) {
+        return BindingBuilder.bind(stockReservadoQueue).to(ventasExchange).with(ROUTING_KEY_STOCK_RESERVADO);
     }
 
     @Bean
-    public MessageConverter messageConverter() {
+    public Binding bindingStockRechazado(Queue stockRechazadoQueue, TopicExchange ventasExchange) {
+        return BindingBuilder.bind(stockRechazadoQueue).to(ventasExchange).with(ROUTING_KEY_STOCK_RECHAZADO);
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 }
