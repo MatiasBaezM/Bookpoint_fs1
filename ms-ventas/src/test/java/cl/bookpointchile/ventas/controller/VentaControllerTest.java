@@ -62,7 +62,7 @@ class VentaControllerTest {
         mockMvc.perform(post("/api/ventas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestValido())))
-                .andExpect(status().isCreated())
+                .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.folio").value("BP-PRE-ABCD1234"));
     }
