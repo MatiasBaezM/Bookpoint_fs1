@@ -6,9 +6,7 @@ import cl.bookpointchile.inventario.exception.ResourceNotFoundException;
 import cl.bookpointchile.inventario.exception.StockInsuficienteException;
 import cl.bookpointchile.inventario.exception.SucursalNoEncontradaException;
 import cl.bookpointchile.inventario.model.Inventario;
-import cl.bookpointchile.inventario.model.Sucursal;
 import cl.bookpointchile.inventario.repository.InventarioRepository;
-import cl.bookpointchile.inventario.repository.SucursalRepository;
 import feign.FeignException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 public class InventarioServiceImpl implements InventarioService {
 
     private final InventarioRepository inventarioRepository;
-    private final SucursalRepository sucursalRepository;
     private final RabbitTemplate rabbitTemplate;
     private final SucursalesClient sucursalesClient;
 
@@ -35,13 +32,7 @@ public class InventarioServiceImpl implements InventarioService {
         log.info("Iniciando ajuste físico. Sucursal ID: {}, Producto ID: {}, Cantidad Ajuste: {}, Motivo: '{}'",
                 request.getSucursalId(), request.getProductoId(), request.getCantidadAjuste(), request.getMotivo());
 
-        Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
-                .orElseThrow(() -> {
-                    log.error("Ajuste fallido: Sucursal con ID {} no existe.", request.getSucursalId());
-                    return new SucursalNoEncontradaException("La sucursal con ID " + request.getSucursalId() + " no fue encontrada.");
-                });
-
-        validarSucursalActivaEnMaestro(sucursal);
+        SucursalMaestraResponseDTO sucursalInfo = validarSucursalActivaEnMaestro(request.getSucursalId());
 
         Inventario inventario = inventarioRepository
                 .findByProductoIdAndSucursalId(request.getProductoId(), request.getSucursalId())
@@ -56,15 +47,15 @@ public class InventarioServiceImpl implements InventarioService {
 
             // Crear nuevo registro de inventario (por defecto, asignamos SKU y stock mínimo genéricos)
             log.info("Producto ID {} no registrado en la sucursal '{}'. Creando nuevo registro de inventario.", 
-                    request.getProductoId(), sucursal.getNombre());
+                    request.getProductoId(), sucursalInfo.getNombre());
             
             inventario = Inventario.builder()
                     .productoId(request.getProductoId())
                     .productoNombre("Producto Genérico ID " + request.getProductoId())
-                    .sku("SKU-" + request.getProductoId() + "-" + sucursal.getId())
+                    .sku("SKU-" + request.getProductoId() + "-" + sucursalInfo.getId())
                     .cantidad(request.getCantidadAjuste())
                     .stockMinimo(5) // Stock mínimo por defecto
-                    .sucursal(sucursal)
+                    .sucursalId(sucursalInfo.getId())
                     .build();
         } else {
             // Si ya existe, validamos que no quede en negativo
@@ -96,14 +87,8 @@ public class InventarioServiceImpl implements InventarioService {
             throw new StockInsuficienteException("La sucursal de origen y destino del traslado no pueden ser la misma.");
         }
 
-        Sucursal origen = sucursalRepository.findById(request.getSucursalOrigenId())
-                .orElseThrow(() -> new SucursalNoEncontradaException("La sucursal de origen con ID " + request.getSucursalOrigenId() + " no existe."));
-
-        Sucursal destino = sucursalRepository.findById(request.getSucursalDestinoId())
-                .orElseThrow(() -> new SucursalNoEncontradaException("La sucursal de destino con ID " + request.getSucursalDestinoId() + " no existe."));
-
-        validarSucursalActivaEnMaestro(origen);
-        validarSucursalActivaEnMaestro(destino);
+        SucursalMaestraResponseDTO origen = validarSucursalActivaEnMaestro(request.getSucursalOrigenId());
+        SucursalMaestraResponseDTO destino = validarSucursalActivaEnMaestro(request.getSucursalDestinoId());
 
         Inventario inventarioOrigen = inventarioRepository
                 .findByProductoIdAndSucursalId(request.getProductoId(), request.getSucursalOrigenId())
@@ -138,7 +123,7 @@ public class InventarioServiceImpl implements InventarioService {
                     .sku(inventarioOrigen.getSku().split("-")[0] + "-" + destino.getId())
                     .cantidad(request.getCantidad())
                     .stockMinimo(inventarioOrigen.getStockMinimo())
-                    .sucursal(destino)
+                    .sucursalId(destino.getId())
                     .build();
         } else {
             inventarioDestino.setCantidad(inventarioDestino.getCantidad() + request.getCantidad());
@@ -156,10 +141,8 @@ public class InventarioServiceImpl implements InventarioService {
     public InventarioResponseDTO obtenerStock(Long sucursalId, Long productoId) {
         log.info("Buscando stock para Sucursal ID: {} y Producto ID: {}", sucursalId, productoId);
         
-        // Verificar que la sucursal exista
-        if (!sucursalRepository.existsById(sucursalId)) {
-            throw new SucursalNoEncontradaException("La sucursal con ID " + sucursalId + " no existe.");
-        }
+        // Verificar que la sucursal exista en el maestro
+        validarSucursalActivaEnMaestro(sucursalId);
 
         Inventario inventario = inventarioRepository.findByProductoIdAndSucursalId(productoId, sucursalId)
                 .orElseThrow(() -> new ResourceNotFoundException("El producto con ID " + productoId + 
@@ -173,9 +156,8 @@ public class InventarioServiceImpl implements InventarioService {
     public List<InventarioResponseDTO> obtenerStockPorSucursal(Long sucursalId) {
         log.info("Obteniendo inventario completo para Sucursal ID: {}", sucursalId);
         
-        if (!sucursalRepository.existsById(sucursalId)) {
-            throw new SucursalNoEncontradaException("La sucursal con ID " + sucursalId + " no existe.");
-        }
+        // Verificar que la sucursal exista en el maestro
+        validarSucursalActivaEnMaestro(sucursalId);
 
         return inventarioRepository.findBySucursalId(sucursalId).stream()
                 .map(this::mapToResponse)
@@ -196,9 +178,6 @@ public class InventarioServiceImpl implements InventarioService {
     public StockResponseDTO verificarDisponibilidad(Long productoId, Integer cantidad) {
         log.info("Verificando disponibilidad de stock global/centralizado para producto ID: {}, cantidad: {}", productoId, cantidad);
         
-        // Simular consulta: buscamos en todas las sucursales y sumamos el stock
-        // (En un caso real de venta presencial, se consultaría a la sucursal específica de la caja,
-        // y en online se consultaría a la Bodega Central. Aquí sumamos el stock total para simplificar e integrar con ms-ventas).
         List<Inventario> stocks = inventarioRepository.findAll().stream()
                 .filter(i -> i.getProductoId().equals(productoId))
                 .collect(Collectors.toList());
@@ -270,30 +249,47 @@ public class InventarioServiceImpl implements InventarioService {
         }
     }
 
-    // Valida la sucursal local contra el maestro de sucursales (ms-sucursales) - degrada con un warning si no está disponible
-    private void validarSucursalActivaEnMaestro(Sucursal sucursal) {
+    // Valida la sucursal local contra el maestro de sucursales (ms-sucursales) y retorna su información
+    private SucursalMaestraResponseDTO validarSucursalActivaEnMaestro(Long sucursalId) {
         try {
-            SucursalMaestraResponseDTO maestra = sucursalesClient.obtenerPorId(sucursal.getId());
-            if (!"ACTIVO".equalsIgnoreCase(maestra.getEstadoOperativo())) {
-                log.error("Sucursal '{}' (ID {}) no está activa en el maestro de sucursales (ms-sucursales). Estado: {}",
-                        sucursal.getNombre(), sucursal.getId(), maestra.getEstadoOperativo());
-                throw new SucursalNoEncontradaException("La sucursal '" + sucursal.getNombre() +
-                        "' no se encuentra operativa en el maestro de sucursales (ms-sucursales).");
+            SucursalMaestraResponseDTO maestra = sucursalesClient.obtenerPorId(sucursalId);
+            if (maestra == null) {
+                throw new SucursalNoEncontradaException("La sucursal con ID " + sucursalId + " no existe en el maestro de sucursales.");
             }
+            if (!"ACTIVO".equalsIgnoreCase(maestra.getEstadoOperativo())) {
+                log.error("Sucursal '{}' (ID {}) no está activa en el maestro de sucursales. Estado: {}",
+                        maestra.getNombre(), sucursalId, maestra.getEstadoOperativo());
+                throw new SucursalNoEncontradaException("La sucursal '" + maestra.getNombre() +
+                        "' no se encuentra operativa en el maestro de sucursales.");
+            }
+            return maestra;
         } catch (SucursalNoEncontradaException e) {
             throw e;
         } catch (FeignException.NotFound e) {
-            log.error("Sucursal '{}' (ID {}) no existe en el maestro de sucursales (ms-sucursales).", sucursal.getNombre(), sucursal.getId());
-            throw new SucursalNoEncontradaException("La sucursal '" + sucursal.getNombre() +
-                    "' no existe en el maestro de sucursales (ms-sucursales).");
+            log.error("Sucursal con ID {} no existe en el maestro de sucursales.", sucursalId);
+            throw new SucursalNoEncontradaException("La sucursal con ID " + sucursalId + " no existe en el maestro de sucursales.");
         } catch (Exception e) {
-            log.warn("No fue posible validar la sucursal '{}' (ID {}) contra ms-sucursales: {}",
-                    sucursal.getNombre(), sucursal.getId(), e.getMessage());
+            log.warn("No fue posible validar la sucursal ID {} contra ms-sucursales: {}", sucursalId, e.getMessage());
+            // En caso de caída de comunicación con el maestro, toleramos fallos construyendo un DTO temporal de respaldo
+            return SucursalMaestraResponseDTO.builder()
+                    .id(sucursalId)
+                    .nombre("Sucursal Temp (ID " + sucursalId + ")")
+                    .estadoOperativo("ACTIVO")
+                    .build();
         }
     }
 
     // Helper Mapper manual
     private InventarioResponseDTO mapToResponse(Inventario i) {
+        String sucursalNombre = "Sucursal Desconocida (ID " + i.getSucursalId() + ")";
+        try {
+            SucursalMaestraResponseDTO sucursal = sucursalesClient.obtenerPorId(i.getSucursalId());
+            if (sucursal != null) {
+                sucursalNombre = sucursal.getNombre();
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo obtener el nombre de la sucursal ID {} desde ms-sucursales: {}", i.getSucursalId(), e.getMessage());
+        }
         return InventarioResponseDTO.builder()
                 .id(i.getId())
                 .productoId(i.getProductoId())
@@ -301,8 +297,8 @@ public class InventarioServiceImpl implements InventarioService {
                 .sku(i.getSku())
                 .cantidad(i.getCantidad())
                 .stockMinimo(i.getStockMinimo())
-                .sucursalId(i.getSucursal().getId())
-                .sucursalNombre(i.getSucursal().getNombre())
+                .sucursalId(i.getSucursalId())
+                .sucursalNombre(sucursalNombre)
                 .alertaReposicion(i.getCantidad() <= i.getStockMinimo())
                 .build();
     }

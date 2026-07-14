@@ -37,7 +37,6 @@ public class Inventario {
     @Column(name = "stock_minimo", nullable = false)
     private Integer stockMinimo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sucursal_id", nullable = false)
-    private Sucursal sucursal;
+    @Column(name = "sucursal_id", nullable = false)
+    private Long sucursalId;
 }

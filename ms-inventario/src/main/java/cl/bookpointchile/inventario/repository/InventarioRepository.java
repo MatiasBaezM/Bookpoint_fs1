@@ -15,6 +15,6 @@ public interface InventarioRepository extends JpaRepository<Inventario, Long> {
 
     List<Inventario> findBySucursalId(Long sucursalId);
 
-    @Query("SELECT i FROM Inventario i JOIN FETCH i.sucursal WHERE i.cantidad <= i.stockMinimo")
+    @Query("SELECT i FROM Inventario i WHERE i.cantidad <= i.stockMinimo")
     List<Inventario> findAlertasStock();
 }

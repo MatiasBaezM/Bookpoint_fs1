@@ -1,9 +1,7 @@
 package cl.bookpointchile.inventario.config;
 
 import cl.bookpointchile.inventario.model.Inventario;
-import cl.bookpointchile.inventario.model.Sucursal;
 import cl.bookpointchile.inventario.repository.InventarioRepository;
-import cl.bookpointchile.inventario.repository.SucursalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -16,37 +14,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    private final SucursalRepository sucursalRepository;
     private final InventarioRepository inventarioRepository;
 
     @Override
     public void run(String... args) throws Exception {
-        if (sucursalRepository.count() == 0) {
+        if (inventarioRepository.count() == 0) {
             log.info("Inicializando datos base en la base de datos de ms-inventario...");
 
-            // 1. Crear las Sucursales Físicas de BookPoint Chile
-            Sucursal concepcion = Sucursal.builder()
-                    .nombre("Bodega Central Concepción")
-                    .direccion("O'Higgins 456, Concepción")
-                    .esCentral(true)
-                    .build();
-
-            Sucursal temuco = Sucursal.builder()
-                    .nombre("Sucursal Temuco")
-                    .direccion("Alemania 1220, Temuco")
-                    .esCentral(false)
-                    .build();
-
-            Sucursal laSerena = Sucursal.builder()
-                    .nombre("Sucursal La Serena")
-                    .direccion("Prat 320, La Serena")
-                    .esCentral(false)
-                    .build();
-
-            sucursalRepository.saveAll(List.of(concepcion, temuco, laSerena));
-            log.info("Sucursales Concepción, Temuco y La Serena registradas.");
-
-            // 2. Cargar Inventario Base para estas Sucursales
+            // 1. Cargar Inventario Base asignando sucursalId estáticos (1: Concepción, 2: Temuco, 3: La Serena)
             // Libro 101: Introducción a los Algoritmos en Java
             Inventario inv1 = Inventario.builder()
                     .productoId(101L)
@@ -54,7 +29,7 @@ public class DataInitializer implements CommandLineRunner {
                     .sku("SKU-ALG-JAVA-101")
                     .cantidad(100)
                     .stockMinimo(10)
-                    .sucursal(concepcion)
+                    .sucursalId(1L) // Concepción
                     .build();
 
             Inventario inv2 = Inventario.builder()
@@ -63,7 +38,7 @@ public class DataInitializer implements CommandLineRunner {
                     .sku("SKU-ALG-JAVA-102")
                     .cantidad(15)
                     .stockMinimo(5)
-                    .sucursal(temuco)
+                    .sucursalId(2L) // Temuco
                     .build();
 
             // Libro 102: Patrones de Diseño de Software
@@ -73,7 +48,7 @@ public class DataInitializer implements CommandLineRunner {
                     .sku("SKU-PAT-DSG-201")
                     .cantidad(50)
                     .stockMinimo(8)
-                    .sucursal(concepcion)
+                    .sucursalId(1L) // Concepción
                     .build();
 
             // Libro 103: Microservicios Eficientes con Spring Boot
@@ -83,7 +58,7 @@ public class DataInitializer implements CommandLineRunner {
                     .sku("SKU-MSV-SPR-301")
                     .cantidad(3) // BAJO STOCK - Debe disparar alerta de reposición
                     .stockMinimo(5)
-                    .sucursal(concepcion)
+                    .sucursalId(1L) // Concepción
                     .build();
 
             Inventario inv5 = Inventario.builder()
@@ -92,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
                     .sku("SKU-MSV-SPR-302")
                     .cantidad(2) // BAJO STOCK - Debe disparar alerta de reposición
                     .stockMinimo(5)
-                    .sucursal(laSerena)
+                    .sucursalId(3L) // La Serena
                     .build();
 
             // Producto 999: Libro sin Stock para Pruebas del Gateway/Ventas
@@ -102,11 +77,11 @@ public class DataInitializer implements CommandLineRunner {
                     .sku("SKU-OUT-STK-999")
                     .cantidad(0)
                     .stockMinimo(2)
-                    .sucursal(concepcion)
+                    .sucursalId(1L) // Concepción
                     .build();
 
             inventarioRepository.saveAll(List.of(inv1, inv2, inv3, inv4, inv5, inv6));
-            log.info("Inventario base cargado con éxito en todas las sucursales físicas.");
+            log.info("Inventario base cargado con éxito vinculando IDs de sucursales maestras.");
         } else {
             log.info("Base de datos ya inicializada. Omitiendo la carga de datos de prueba.");
         }

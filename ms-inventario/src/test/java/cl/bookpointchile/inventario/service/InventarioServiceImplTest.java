@@ -11,9 +11,7 @@ import cl.bookpointchile.inventario.exception.ResourceNotFoundException;
 import cl.bookpointchile.inventario.exception.StockInsuficienteException;
 import cl.bookpointchile.inventario.exception.SucursalNoEncontradaException;
 import cl.bookpointchile.inventario.model.Inventario;
-import cl.bookpointchile.inventario.model.Sucursal;
 import cl.bookpointchile.inventario.repository.InventarioRepository;
-import cl.bookpointchile.inventario.repository.SucursalRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +32,6 @@ import static org.mockito.Mockito.*;
 class InventarioServiceImplTest {
 
     @Mock private InventarioRepository inventarioRepository;
-    @Mock private SucursalRepository sucursalRepository;
     @Mock private RabbitTemplate rabbitTemplate;
     @Mock private SucursalesClient sucursalesClient;
 
@@ -43,14 +40,10 @@ class InventarioServiceImplTest {
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private Sucursal sucursal(Long id) {
-        return Sucursal.builder().id(id).nombre("Sucursal " + id).direccion("Av. 1").build();
-    }
-
-    private Inventario inventario(Long id, int cantidad, int stockMinimo, Sucursal s) {
+    private Inventario inventario(Long id, int cantidad, int stockMinimo, Long sucursalId) {
         return Inventario.builder()
-                .id(id).productoId(1L).productoNombre("Libro").sku("SKU-1-" + s.getId())
-                .cantidad(cantidad).stockMinimo(stockMinimo).sucursal(s).build();
+                .id(id).productoId(1L).productoNombre("Libro").sku("SKU-1-" + sucursalId)
+                .cantidad(cantidad).stockMinimo(stockMinimo).sucursalId(sucursalId).build();
     }
 
     private SucursalMaestraResponseDTO sucursalActiva(Long id) {
@@ -64,7 +57,6 @@ class InventarioServiceImplTest {
     void registrarAjusteCreaNuevoInventario_cuandoNoExiste() {
         AjusteStockRequestDTO request = AjusteStockRequestDTO.builder()
                 .productoId(1L).sucursalId(1L).cantidadAjuste(50).motivo("Reposición").build();
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(sucursal(1L)));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.empty());
         when(inventarioRepository.save(any(Inventario.class))).thenAnswer(inv -> {
@@ -83,7 +75,6 @@ class InventarioServiceImplTest {
     void registrarAjusteNegativoSinInventarioPrevio_lanzaStockInsuficiente() {
         AjusteStockRequestDTO request = AjusteStockRequestDTO.builder()
                 .productoId(1L).sucursalId(1L).cantidadAjuste(-5).motivo("Merma").build();
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(sucursal(1L)));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.empty());
 
@@ -96,7 +87,7 @@ class InventarioServiceImplTest {
     void registrarAjusteSucursalInexistente_lanzaSucursalNoEncontrada() {
         AjusteStockRequestDTO request = AjusteStockRequestDTO.builder()
                 .productoId(1L).sucursalId(99L).cantidadAjuste(5).motivo("X").build();
-        when(sucursalRepository.findById(99L)).thenReturn(Optional.empty());
+        when(sucursalesClient.obtenerPorId(99L)).thenThrow(new SucursalNoEncontradaException("La sucursal con ID 99 no existe."));
 
         assertThrows(SucursalNoEncontradaException.class,
                 () -> inventarioService.registrarAjusteFisico(request));
@@ -106,11 +97,9 @@ class InventarioServiceImplTest {
     void registrarAjusteQueDejaStockNegativo_lanzaStockInsuficiente() {
         AjusteStockRequestDTO request = AjusteStockRequestDTO.builder()
                 .productoId(1L).sucursalId(1L).cantidadAjuste(-100).motivo("Merma").build();
-        Sucursal s = sucursal(1L);
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(s));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L))
-                .thenReturn(Optional.of(inventario(10L, 10, 5, s)));
+                .thenReturn(Optional.of(inventario(10L, 10, 5, 1L)));
 
         assertThrows(StockInsuficienteException.class,
                 () -> inventarioService.registrarAjusteFisico(request));
@@ -120,7 +109,6 @@ class InventarioServiceImplTest {
     void registrarAjusteSucursalInactiva_lanzaSucursalNoEncontrada() {
         AjusteStockRequestDTO request = AjusteStockRequestDTO.builder()
                 .productoId(1L).sucursalId(1L).cantidadAjuste(10).motivo("X").build();
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(sucursal(1L)));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(
                 SucursalMaestraResponseDTO.builder().id(1L).estadoOperativo("INACTIVO").build());
 
@@ -143,7 +131,7 @@ class InventarioServiceImplTest {
     void trasladarStockOrigenNoEncontrado_lanzaSucursalNoEncontrada() {
         TrasladoStockRequestDTO request = TrasladoStockRequestDTO.builder()
                 .productoId(1L).sucursalOrigenId(99L).sucursalDestinoId(2L).cantidad(5).build();
-        when(sucursalRepository.findById(99L)).thenReturn(Optional.empty());
+        when(sucursalesClient.obtenerPorId(99L)).thenThrow(new SucursalNoEncontradaException(""));
 
         assertThrows(SucursalNoEncontradaException.class,
                 () -> inventarioService.trasladarStock(request));
@@ -153,8 +141,6 @@ class InventarioServiceImplTest {
     void trasladarStockProductoSinStockEnOrigen_lanzaStockInsuficiente() {
         TrasladoStockRequestDTO request = TrasladoStockRequestDTO.builder()
                 .productoId(1L).sucursalOrigenId(1L).sucursalDestinoId(2L).cantidad(5).build();
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(sucursal(1L)));
-        when(sucursalRepository.findById(2L)).thenReturn(Optional.of(sucursal(2L)));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(sucursalesClient.obtenerPorId(2L)).thenReturn(sucursalActiva(2L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.empty());
@@ -167,14 +153,10 @@ class InventarioServiceImplTest {
     void trasladarStockInsuficienteEnOrigen_lanzaStockInsuficiente() {
         TrasladoStockRequestDTO request = TrasladoStockRequestDTO.builder()
                 .productoId(1L).sucursalOrigenId(1L).sucursalDestinoId(2L).cantidad(50).build();
-        Sucursal origen = sucursal(1L);
-        Sucursal destino = sucursal(2L);
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(origen));
-        when(sucursalRepository.findById(2L)).thenReturn(Optional.of(destino));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(sucursalesClient.obtenerPorId(2L)).thenReturn(sucursalActiva(2L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L))
-                .thenReturn(Optional.of(inventario(10L, 5, 2, origen)));
+                .thenReturn(Optional.of(inventario(10L, 5, 2, 1L)));
 
         assertThrows(StockInsuficienteException.class,
                 () -> inventarioService.trasladarStock(request));
@@ -184,13 +166,9 @@ class InventarioServiceImplTest {
     void trasladarStock_exitoso_actualizaDestinoExistente() {
         TrasladoStockRequestDTO request = TrasladoStockRequestDTO.builder()
                 .productoId(1L).sucursalOrigenId(1L).sucursalDestinoId(2L).cantidad(5).build();
-        Sucursal origen = sucursal(1L);
-        Sucursal destino = sucursal(2L);
-        Inventario invOrigen = inventario(10L, 20, 2, origen);
-        Inventario invDestino = inventario(11L, 3, 2, destino);
+        Inventario invOrigen = inventario(10L, 20, 2, 1L);
+        Inventario invDestino = inventario(11L, 3, 2, 2L);
 
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(origen));
-        when(sucursalRepository.findById(2L)).thenReturn(Optional.of(destino));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(sucursalesClient.obtenerPorId(2L)).thenReturn(sucursalActiva(2L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.of(invOrigen));
@@ -208,12 +186,8 @@ class InventarioServiceImplTest {
     void trasladarStock_exitoso_creaInventarioEnDestino() {
         TrasladoStockRequestDTO request = TrasladoStockRequestDTO.builder()
                 .productoId(1L).sucursalOrigenId(1L).sucursalDestinoId(2L).cantidad(5).build();
-        Sucursal origen = sucursal(1L);
-        Sucursal destino = sucursal(2L);
-        Inventario invOrigen = inventario(10L, 20, 2, origen);
+        Inventario invOrigen = inventario(10L, 20, 2, 1L);
 
-        when(sucursalRepository.findById(1L)).thenReturn(Optional.of(origen));
-        when(sucursalRepository.findById(2L)).thenReturn(Optional.of(destino));
         when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(sucursalesClient.obtenerPorId(2L)).thenReturn(sucursalActiva(2L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.of(invOrigen));
@@ -235,7 +209,7 @@ class InventarioServiceImplTest {
 
     @Test
     void obtenerStockSucursalInexistente_lanzaSucursalNoEncontrada() {
-        when(sucursalRepository.existsById(99L)).thenReturn(false);
+        when(sucursalesClient.obtenerPorId(99L)).thenThrow(new SucursalNoEncontradaException(""));
 
         assertThrows(SucursalNoEncontradaException.class,
                 () -> inventarioService.obtenerStock(99L, 1L));
@@ -243,7 +217,7 @@ class InventarioServiceImplTest {
 
     @Test
     void obtenerStockProductoNoRegistrado_lanzaResourceNotFound() {
-        when(sucursalRepository.existsById(1L)).thenReturn(true);
+        when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
@@ -252,10 +226,9 @@ class InventarioServiceImplTest {
 
     @Test
     void obtenerStock_exitoso_retornaInventario() {
-        Sucursal s = sucursal(1L);
-        when(sucursalRepository.existsById(1L)).thenReturn(true);
+        when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L))
-                .thenReturn(Optional.of(inventario(10L, 30, 5, s)));
+                .thenReturn(Optional.of(inventario(10L, 30, 5, 1L)));
 
         InventarioResponseDTO response = inventarioService.obtenerStock(1L, 1L);
 
@@ -267,7 +240,7 @@ class InventarioServiceImplTest {
 
     @Test
     void obtenerStockPorSucursalInexistente_lanzaSucursalNoEncontrada() {
-        when(sucursalRepository.existsById(99L)).thenReturn(false);
+        when(sucursalesClient.obtenerPorId(99L)).thenThrow(new SucursalNoEncontradaException(""));
 
         assertThrows(SucursalNoEncontradaException.class,
                 () -> inventarioService.obtenerStockPorSucursal(99L));
@@ -275,10 +248,9 @@ class InventarioServiceImplTest {
 
     @Test
     void obtenerStockPorSucursal_exitoso_retornaLista() {
-        Sucursal s = sucursal(1L);
-        when(sucursalRepository.existsById(1L)).thenReturn(true);
+        when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
         when(inventarioRepository.findBySucursalId(1L))
-                .thenReturn(List.of(inventario(10L, 20, 5, s), inventario(11L, 5, 3, s)));
+                .thenReturn(List.of(inventario(10L, 20, 5, 1L), inventario(11L, 5, 3, 1L)));
 
         List<InventarioResponseDTO> response = inventarioService.obtenerStockPorSucursal(1L);
 
@@ -290,8 +262,7 @@ class InventarioServiceImplTest {
 
     @Test
     void verificarDisponibilidadConStockSuficiente_retornaDisponible() {
-        Sucursal s = sucursal(1L);
-        when(inventarioRepository.findAll()).thenReturn(List.of(inventario(10L, 50, 5, s)));
+        when(inventarioRepository.findAll()).thenReturn(List.of(inventario(10L, 50, 5, 1L)));
 
         StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 10);
 
@@ -301,8 +272,7 @@ class InventarioServiceImplTest {
 
     @Test
     void verificarDisponibilidadConStockInsuficiente_retornaNoDisponible() {
-        Sucursal s = sucursal(1L);
-        when(inventarioRepository.findAll()).thenReturn(List.of(inventario(10L, 2, 5, s)));
+        when(inventarioRepository.findAll()).thenReturn(List.of(inventario(10L, 2, 5, 1L)));
 
         StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 10);
 
@@ -314,8 +284,8 @@ class InventarioServiceImplTest {
 
     @Test
     void obtenerAlertasReposicion_retornaLista() {
-        Sucursal s = sucursal(1L);
-        when(inventarioRepository.findAlertasStock()).thenReturn(List.of(inventario(10L, 3, 5, s)));
+        when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
+        when(inventarioRepository.findAlertasStock()).thenReturn(List.of(inventario(10L, 3, 5, 1L)));
 
         List<InventarioResponseDTO> response = inventarioService.obtenerAlertasReposicion();
 
@@ -327,8 +297,7 @@ class InventarioServiceImplTest {
 
     @Test
     void procesarVentaCreada_stockSuficiente_descontaYPublicaReservado() {
-        Sucursal s = sucursal(1L);
-        Inventario inv = inventario(10L, 20, 5, s);
+        Inventario inv = inventario(10L, 20, 5, 1L);
 
         VentaCreadaEvent event = VentaCreadaEvent.builder()
                 .ventaId(1L).folio("BP-ONL-0001")
@@ -353,8 +322,7 @@ class InventarioServiceImplTest {
 
     @Test
     void procesarVentaCreada_stockInsuficiente_publicaRechazado() {
-        Sucursal s = sucursal(1L);
-        Inventario inv = inventario(10L, 2, 5, s);
+        Inventario inv = inventario(10L, 2, 5, 1L);
 
         VentaCreadaEvent event = VentaCreadaEvent.builder()
                 .ventaId(2L).folio("BP-ONL-0002")
