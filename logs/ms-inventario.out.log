@@ -95,3 +95,4 @@
 2026-07-15T11:33:51.678-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-1] c.b.i.service.InventarioServiceImpl      : Buscando stock para Sucursal ID: 4 y Producto ID: 6
 2026-07-15T11:33:52.396-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-2] c.b.i.service.InventarioServiceImpl      : Iniciando ajuste físico. Sucursal ID: 4, Producto ID: 6, Cantidad Ajuste: -1, Motivo: 'Picking completado - venta 2'
 2026-07-15T11:33:52.411-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-2] c.b.i.service.InventarioServiceImpl      : Ajuste físico de inventario completado con éxito. Producto: Producto Genérico ID 6, Cantidad Resultante: 38
+2026-07-15T11:38:50.061-04:00  WARN 18824 --- [ms-inventario] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m3s967ms491µs200ns).

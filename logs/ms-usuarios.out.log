@@ -1,0 +1,252 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:03:03.043-04:00  INFO 21116 --- [ms-usuarios] [           main] c.b.usuarios.UsuariosApplication         : Starting UsuariosApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 21116 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-usuarios\target\usuarios-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-usuarios)
+2026-07-15T11:03:03.064-04:00  INFO 21116 --- [ms-usuarios] [           main] c.b.usuarios.UsuariosApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:03:08.038-04:00  INFO 21116 --- [ms-usuarios] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:03:08.247-04:00  INFO 21116 --- [ms-usuarios] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 156 ms. Found 2 JPA repository interfaces.
+2026-07-15T11:03:11.868-04:00  INFO 21116 --- [ms-usuarios] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8083 (http)
+2026-07-15T11:03:11.915-04:00  INFO 21116 --- [ms-usuarios] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:03:11.916-04:00  INFO 21116 --- [ms-usuarios] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:03:12.022-04:00  INFO 21116 --- [ms-usuarios] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 8692 ms
+2026-07-15T11:03:13.856-04:00  INFO 21116 --- [ms-usuarios] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:03:14.148-04:00  INFO 21116 --- [ms-usuarios] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:03:16.255-04:00  INFO 21116 --- [ms-usuarios] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:03:16.377-04:00  INFO 21116 --- [ms-usuarios] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:03:16.812-04:00  INFO 21116 --- [ms-usuarios] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3c6fb501
+2026-07-15T11:03:16.816-04:00  INFO 21116 --- [ms-usuarios] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:03:16.963-04:00  WARN 21116 --- [ms-usuarios] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:03:17.037-04:00  INFO 21116 --- [ms-usuarios] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_usuarios?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_usuarios/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:03:19.441-04:00  INFO 21116 --- [ms-usuarios] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-15T11:03:21.877-04:00  INFO 21116 --- [ms-usuarios] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:03:22.483-04:00  INFO 21116 --- [ms-usuarios] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:03:24.185-04:00  WARN 21116 --- [ms-usuarios] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:03:26.365-04:00  INFO 21116 --- [ms-usuarios] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:03:26.547-04:00  INFO 21116 --- [ms-usuarios] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8083 (http) with context path '/'
+2026-07-15T11:03:26.571-04:00  INFO 21116 --- [ms-usuarios] [           main] c.b.usuarios.UsuariosApplication         : Started UsuariosApplication in 25.513 seconds (process running for 28.077)
+Hibernate: 
+    select
+        count(*) 
+    from
+        roles r1_0
+2026-07-15T11:03:27.601-04:00  INFO 21116 --- [ms-usuarios] [           main] c.b.usuarios.config.DataInitializer      : Roles base de ms-usuarios ya se encuentran sembrados en la base de datos.
+2026-07-15T11:03:27.603-04:00  WARN 21116 --- [ms-usuarios] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:03:27.604-04:00  WARN 21116 --- [ms-usuarios] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:05.329-04:00  WARN 21116 --- [ms-usuarios] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m18s396ms894µs600ns).
+2026-07-15T11:31:45.458-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-4] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-15T11:31:45.459-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-4] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-15T11:31:45.462-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-4] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-07-15T11:31:45.588-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-4] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con RUT: 19876543-2
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    where
+        u1_0.rut=?
+2026-07-15T11:31:45.830-04:00 ERROR 21116 --- [ms-usuarios] [nio-8083-exec-4] c.b.usuarios.service.UsuarioServiceImpl  : Usuario con RUT 19876543-2 no encontrado.
+2026-07-15T11:32:05.367-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-5] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con RUT: 19876543-2
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    where
+        u1_0.rut=?
+2026-07-15T11:32:05.373-04:00 ERROR 21116 --- [ms-usuarios] [nio-8083-exec-5] c.b.usuarios.service.UsuarioServiceImpl  : Usuario con RUT 19876543-2 no encontrado.
+2026-07-15T11:32:33.975-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-6] c.b.usuarios.service.UsuarioServiceImpl  : Iniciando registro de usuario con email: 'diego.fuentes.smoketest@example.com' y nombre: 'Diego Fuentes'
+Hibernate: 
+    select
+        u1_0.id 
+    from
+        usuarios u1_0 
+    where
+        u1_0.email=? 
+    limit
+        ?
+Hibernate: 
+    select
+        u1_0.id 
+    from
+        usuarios u1_0 
+    where
+        u1_0.rut=? 
+    limit
+        ?
+2026-07-15T11:32:34.014-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-6] c.b.usuarios.service.UsuarioServiceImpl  : No se especificó un rol. Asignando rol por defecto 'Cliente Web'.
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.descripcion,
+        r1_0.nombre 
+    from
+        roles r1_0 
+    where
+        upper(r1_0.nombre)=upper(?)
+Hibernate: 
+    insert 
+    into
+        usuarios
+        (email, estado, nombre, password, rol_id, rut) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-07-15T11:32:34.190-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-6] c.b.usuarios.service.UsuarioServiceImpl  : Usuario registrado con éxito en la plataforma. ID Asignado: 2, Rol: 'Cliente Web'
+2026-07-15T11:32:34.505-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-7] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con ID: 2
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        r1_0.id,
+        r1_0.descripcion,
+        r1_0.nombre,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    join
+        roles r1_0 
+            on r1_0.id=u1_0.rol_id 
+    where
+        u1_0.id=?
+2026-07-15T11:32:34.681-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-8] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con RUT: 20111222-3
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    where
+        u1_0.rut=?
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.descripcion,
+        r1_0.nombre 
+    from
+        roles r1_0 
+    where
+        r1_0.id=?
+2026-07-15T11:38:51.504-04:00  WARN 21116 --- [ms-usuarios] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m16s139ms492µs600ns).
+2026-07-15T12:29:52.326-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-2] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con ID: 0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        r1_0.id,
+        r1_0.descripcion,
+        r1_0.nombre,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    join
+        roles r1_0 
+            on r1_0.id=u1_0.rol_id 
+    where
+        u1_0.id=?
+2026-07-15T12:29:52.348-04:00 ERROR 21116 --- [ms-usuarios] [nio-8083-exec-2] c.b.usuarios.service.UsuarioServiceImpl  : Usuario con ID 0 no encontrado.
+2026-07-15T12:29:54.396-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-3] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con ID: 0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        r1_0.id,
+        r1_0.descripcion,
+        r1_0.nombre,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    join
+        roles r1_0 
+            on r1_0.id=u1_0.rol_id 
+    where
+        u1_0.id=?
+2026-07-15T12:29:54.400-04:00 ERROR 21116 --- [ms-usuarios] [nio-8083-exec-3] c.b.usuarios.service.UsuarioServiceImpl  : Usuario con ID 0 no encontrado.
+2026-07-15T12:30:00.780-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-4] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con ID: 0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        r1_0.id,
+        r1_0.descripcion,
+        r1_0.nombre,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    join
+        roles r1_0 
+            on r1_0.id=u1_0.rol_id 
+    where
+        u1_0.id=?
+2026-07-15T12:30:00.783-04:00 ERROR 21116 --- [ms-usuarios] [nio-8083-exec-4] c.b.usuarios.service.UsuarioServiceImpl  : Usuario con ID 0 no encontrado.
+2026-07-15T12:30:09.157-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-5] c.b.usuarios.service.UsuarioServiceImpl  : Buscando detalles de usuario con ID: 0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.email,
+        u1_0.estado,
+        u1_0.nombre,
+        u1_0.password,
+        u1_0.rol_id,
+        r1_0.id,
+        r1_0.descripcion,
+        r1_0.nombre,
+        u1_0.rut 
+    from
+        usuarios u1_0 
+    join
+        roles r1_0 
+            on r1_0.id=u1_0.rol_id 
+    where
+        u1_0.id=?
+2026-07-15T12:30:09.196-04:00 ERROR 21116 --- [ms-usuarios] [nio-8083-exec-5] c.b.usuarios.service.UsuarioServiceImpl  : Usuario con ID 0 no encontrado.
+2026-07-15T13:27:17.921-04:00  INFO 21116 --- [ms-usuarios] [nio-8083-exec-5] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 426 ms

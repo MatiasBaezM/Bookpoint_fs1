@@ -290,6 +290,92 @@ class VentaServiceImplTest {
     }
 
     @Test
+    void registrarVentaConTipoDocumentoInvalido_lanzaInvalidSale() {
+        // Given
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
+                .tipoDocumento("GUIA_DESPACHO")
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(inventarioClient.checkStock(1L, 1L, 1)).thenReturn(stockDisponible());
+
+        // When + Then
+        assertThrows(InvalidSaleException.class, () -> ventaService.registrarVenta(request));
+        verify(ventaRepository, never()).save(any(Venta.class));
+    }
+
+    @Test
+    void registrarVentaFacturaSinRazonSocialNiGiro_lanzaInvalidSale() {
+        // Given
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
+                .tipoDocumento("FACTURA")
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(inventarioClient.checkStock(1L, 1L, 1)).thenReturn(stockDisponible());
+
+        // When + Then
+        assertThrows(InvalidSaleException.class, () -> ventaService.registrarVenta(request));
+        verify(ventaRepository, never()).save(any(Venta.class));
+    }
+
+    @Test
+    void registrarVentaFacturaConRazonSocialYGiro_seGuardaComoFactura() {
+        // Given
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
+                .tipoDocumento("factura")
+                .razonSocial("Libros SpA")
+                .giro("Venta de libros")
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(inventarioClient.checkStock(1L, 1L, 1)).thenReturn(stockDisponible());
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
+            Venta v = inv.getArgument(0);
+            v.setId(50L);
+            return v;
+        });
+
+        // When
+        VentaResponseDTO response = ventaService.registrarVenta(request);
+
+        // Then
+        assertEquals("FACTURA", response.getTipoDocumento());
+        assertEquals("LIBROS SPA", response.getRazonSocial());
+        assertEquals("VENTA DE LIBROS", response.getGiro());
+    }
+
+    @Test
+    void registrarVentaSinTipoDocumento_defaultBoleta() {
+        // Given (sin tipoDocumento explícito -> por defecto BOLETA)
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(inventarioClient.checkStock(1L, 1L, 1)).thenReturn(stockDisponible());
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
+            Venta v = inv.getArgument(0);
+            v.setId(51L);
+            return v;
+        });
+
+        // When
+        VentaResponseDTO response = ventaService.registrarVenta(request);
+
+        // Then
+        assertEquals("BOLETA", response.getTipoDocumento());
+        assertNull(response.getRazonSocial());
+    }
+
+    @Test
     void obtenerVentaPorFolioExistente_retornaVenta() {
         // Given
         Venta venta = Venta.builder()

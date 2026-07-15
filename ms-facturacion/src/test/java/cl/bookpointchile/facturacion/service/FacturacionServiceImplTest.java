@@ -111,6 +111,107 @@ class FacturacionServiceImplTest {
     }
 
     @Test
+    void emitirDocumento_montoNetoNoCoincideConLaVenta_lanzaDatosIncompletos() {
+        // El neto real de la venta (11900 / 1.19 = 10000) no coincide con lo que trae la petición.
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(500.0).build();
+
+        when(repository.existsByFolioVenta("BP-PRE-0001")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-0001"))
+                .thenReturn(venta("BP-PRE-0001", 11900.0, "19876543-2", "BOLETA"));
+
+        assertThrows(DatosFacturacionIncompletosException.class,
+                () -> facturacionService.emitirDocumento(request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void emitirDocumento_ventaNoEncontradaEnMsVentas_lanzaDatosIncompletos() {
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-9999").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0).build();
+
+        when(repository.existsByFolioVenta("BP-PRE-9999")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-9999"))
+                .thenThrow(mock(feign.FeignException.NotFound.class));
+
+        assertThrows(DatosFacturacionIncompletosException.class,
+                () -> facturacionService.emitirDocumento(request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void emitirDocumento_fallaComunicacionConMsVentas_lanzaDatosIncompletos() {
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0).build();
+
+        when(repository.existsByFolioVenta("BP-PRE-0001")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-0001"))
+                .thenThrow(new RuntimeException("Timeout"));
+
+        assertThrows(DatosFacturacionIncompletosException.class,
+                () -> facturacionService.emitirDocumento(request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void emitirDocumento_clienteNoRegistradoEnMsUsuarios_lanzaDatosIncompletos() {
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0).build();
+
+        when(repository.existsByFolioVenta("BP-PRE-0001")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-0001"))
+                .thenReturn(venta("BP-PRE-0001", 11900.0, "19876543-2", "BOLETA"));
+        when(usuariosClient.obtenerUsuarioPorRut("19876543-2"))
+                .thenThrow(mock(feign.FeignException.NotFound.class));
+
+        assertThrows(DatosFacturacionIncompletosException.class,
+                () -> facturacionService.emitirDocumento(request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void emitirDocumento_clienteInactivo_lanzaDatosIncompletos() {
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0).build();
+
+        when(repository.existsByFolioVenta("BP-PRE-0001")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-0001"))
+                .thenReturn(venta("BP-PRE-0001", 11900.0, "19876543-2", "BOLETA"));
+        when(usuariosClient.obtenerUsuarioPorRut("19876543-2"))
+                .thenReturn(UsuarioResponseDTO.builder().rut("19876543-2").estado("INACTIVO").build());
+
+        assertThrows(DatosFacturacionIncompletosException.class,
+                () -> facturacionService.emitirDocumento(request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void emitirDocumento_fallaComunicacionConMsUsuarios_continuaEnModoDegradadoYEmite() {
+        // Un fallo de comunicación (no un 404) con ms-usuarios no debe bloquear la emisión:
+        // el documento se emite igual, en modo degradado.
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0).build();
+
+        when(repository.existsByFolioVenta("BP-PRE-0001")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-0001"))
+                .thenReturn(venta("BP-PRE-0001", 11900.0, "19876543-2", "BOLETA"));
+        when(usuariosClient.obtenerUsuarioPorRut("19876543-2"))
+                .thenThrow(new RuntimeException("Timeout"));
+        when(repository.save(any(DocumentoTributario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        DocumentoResponseDTO response = facturacionService.emitirDocumento(request);
+
+        assertEquals("BP-PRE-0001", response.getFolioVenta());
+        verify(repository, times(1)).save(any(DocumentoTributario.class));
+    }
+
+    @Test
     void emitirDocumentoDeVentaSinSucursal_lanzaDatosIncompletos() {
         EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
                 .folioVenta("BP-PRE-0001").rutCliente("19876543-2")

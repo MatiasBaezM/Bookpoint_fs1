@@ -360,3 +360,4 @@ Hibernate:
         sucursales s1_0 
     where
         s1_0.id=?
+2026-07-15T11:38:51.501-04:00  WARN 20988 --- [ms-sucursales] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m19s35ms306µs700ns).

@@ -1,0 +1,340 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:04:22.879-04:00  INFO 21292 --- [ms-ventas] [           main] c.b.ventas.VentasApplication             : Starting VentasApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 21292 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-ventas\target\ventas-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-ventas)
+2026-07-15T11:04:22.927-04:00  INFO 21292 --- [ms-ventas] [           main] c.b.ventas.VentasApplication             : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:04:25.808-04:00  INFO 21292 --- [ms-ventas] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:04:25.912-04:00  INFO 21292 --- [ms-ventas] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 84 ms. Found 1 JPA repository interface.
+2026-07-15T11:04:26.780-04:00  INFO 21292 --- [ms-ventas] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=5b2881aa-3e20-35c4-8188-5639f6893f53
+2026-07-15T11:04:28.553-04:00  INFO 21292 --- [ms-ventas] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8081 (http)
+2026-07-15T11:04:28.620-04:00  INFO 21292 --- [ms-ventas] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:04:28.621-04:00  INFO 21292 --- [ms-ventas] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:04:28.692-04:00  INFO 21292 --- [ms-ventas] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 5643 ms
+2026-07-15T11:04:29.754-04:00  INFO 21292 --- [ms-ventas] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:04:29.918-04:00  INFO 21292 --- [ms-ventas] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:04:30.983-04:00  INFO 21292 --- [ms-ventas] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:04:31.103-04:00  INFO 21292 --- [ms-ventas] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:04:31.509-04:00  INFO 21292 --- [ms-ventas] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7272914b
+2026-07-15T11:04:31.550-04:00  INFO 21292 --- [ms-ventas] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:04:31.644-04:00  WARN 21292 --- [ms-ventas] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:04:31.682-04:00  INFO 21292 --- [ms-ventas] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_ventas?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_ventas/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:04:33.519-04:00  INFO 21292 --- [ms-ventas] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table ventas 
+       modify column estado enum ('COMPLETADA','PENDIENTE','RECHAZADA') not null
+Hibernate: 
+    alter table ventas 
+       add column giro varchar(150)
+Hibernate: 
+    alter table ventas 
+       add column razon_social varchar(150)
+Hibernate: 
+    alter table ventas 
+       add column sucursal_id bigint not null
+Hibernate: 
+    alter table ventas 
+       modify column tipo_descuento enum ('CONVENIO_ESTUDIANTIL','CUPON','NINGUNO') not null
+Hibernate: 
+    alter table ventas 
+       add column tipo_documento varchar(20) not null
+Hibernate: 
+    alter table ventas 
+       modify column tipo_venta enum ('ONLINE','PRESENCIAL') not null
+2026-07-15T11:04:34.062-04:00  INFO 21292 --- [ms-ventas] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:04:34.445-04:00  INFO 21292 --- [ms-ventas] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:04:35.433-04:00  WARN 21292 --- [ms-ventas] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:04:38.988-04:00  INFO 21292 --- [ms-ventas] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:04:39.216-04:00  INFO 21292 --- [ms-ventas] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8081 (http) with context path '/'
+2026-07-15T11:04:39.283-04:00  INFO 21292 --- [ms-ventas] [           main] c.b.ventas.VentasApplication             : Started VentasApplication in 17.586 seconds (process running for 19.018)
+2026-07-15T11:04:39.424-04:00  WARN 21292 --- [ms-ventas] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:04:39.462-04:00  WARN 21292 --- [ms-ventas] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:24.713-04:00  WARN 21292 --- [ms-ventas] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m23s53ms129µs900ns).
+2026-07-15T11:28:36.431-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-4] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-15T11:28:36.432-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-4] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-15T11:28:36.435-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-4] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-07-15T11:28:36.590-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-4] c.b.ventas.service.VentaServiceImpl      : Obteniendo listado de todas las ventas.
+Hibernate: 
+    select
+        v1_0.id,
+        v1_0.asistente_nombre,
+        v1_0.cliente_nombre,
+        v1_0.cliente_rut,
+        v1_0.codigo_descuento,
+        v1_0.descuento_aplicado,
+        v1_0.estado,
+        v1_0.fecha,
+        v1_0.folio,
+        v1_0.giro,
+        v1_0.razon_social,
+        v1_0.subtotal,
+        v1_0.sucursal_id,
+        v1_0.tipo_descuento,
+        v1_0.tipo_documento,
+        v1_0.tipo_venta,
+        v1_0.total,
+        v1_0.usuario_id 
+    from
+        ventas v1_0
+2026-07-15T11:31:33.342-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-5] c.b.ventas.service.VentaServiceImpl      : Iniciando registro de venta. Tipo: ONLINE, Canal: Online
+2026-07-15T11:31:33.415-04:00  WARN 21292 --- [ms-ventas] [nio-8081-exec-5] c.b.ventas.service.VentaServiceImpl      : Stock insuficiente en la sucursal ID 5 para el producto ID 6. Disponible: 3, Solicitado: 10
+2026-07-15T11:31:43.154-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-7] c.b.ventas.service.VentaServiceImpl      : Iniciando registro de venta. Tipo: PRESENCIAL, Canal: Caja
+Hibernate: 
+    insert 
+    into
+        ventas
+        (asistente_nombre, cliente_nombre, cliente_rut, codigo_descuento, descuento_aplicado, estado, fecha, folio, giro, razon_social, subtotal, sucursal_id, tipo_descuento, tipo_documento, tipo_venta, total, usuario_id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        detalles_venta
+        (cantidad, precio_unitario, producto_id, producto_nombre, subtotal, venta_id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-07-15T11:31:43.380-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-7] c.b.ventas.service.VentaServiceImpl      : Venta guardada con éxito en la base de datos (Estado: PENDIENTE). Folio: BP-PRE-2F69F7EB, ID de Venta: 1
+2026-07-15T11:31:43.389-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-7] c.b.ventas.service.VentaServiceImpl      : Evento VentaRegistradaInternaEvent publicado para folio: BP-PRE-2F69F7EB
+2026-07-15T11:31:43.628-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-7] c.b.ventas.service.VentaServiceImpl      : Stock descontado con éxito en ms-inventario. Venta ID: 1 marcada como COMPLETADA.
+Hibernate: 
+    update
+        ventas 
+    set
+        asistente_nombre=?,
+        cliente_nombre=?,
+        cliente_rut=?,
+        codigo_descuento=?,
+        descuento_aplicado=?,
+        estado=?,
+        fecha=?,
+        folio=?,
+        giro=?,
+        razon_social=?,
+        subtotal=?,
+        sucursal_id=?,
+        tipo_descuento=?,
+        tipo_documento=?,
+        tipo_venta=?,
+        total=?,
+        usuario_id=? 
+    where
+        id=?
+2026-07-15T11:31:43.689-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-7] c.b.v.event.VentaConfirmadaListener      : Venta confirmada y guardada en BD. Iniciando emisión de factura/boleta para folio: BP-PRE-2F69F7EB
+2026-07-15T11:31:44.600-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-9] c.b.ventas.service.VentaServiceImpl      : Buscando venta con folio: BP-PRE-2F69F7EB
+Hibernate: 
+    select
+        v1_0.id,
+        v1_0.asistente_nombre,
+        v1_0.cliente_nombre,
+        v1_0.cliente_rut,
+        v1_0.codigo_descuento,
+        v1_0.descuento_aplicado,
+        v1_0.estado,
+        v1_0.fecha,
+        v1_0.folio,
+        v1_0.giro,
+        v1_0.razon_social,
+        v1_0.subtotal,
+        v1_0.sucursal_id,
+        v1_0.tipo_descuento,
+        v1_0.tipo_documento,
+        v1_0.tipo_venta,
+        v1_0.total,
+        v1_0.usuario_id 
+    from
+        ventas v1_0 
+    where
+        v1_0.folio=?
+Hibernate: 
+    select
+        d1_0.venta_id,
+        d1_0.id,
+        d1_0.cantidad,
+        d1_0.precio_unitario,
+        d1_0.producto_id,
+        d1_0.producto_nombre,
+        d1_0.subtotal 
+    from
+        detalles_venta d1_0 
+    where
+        d1_0.venta_id=?
+2026-07-15T11:31:46.343-04:00  WARN 21292 --- [ms-ventas] [nio-8081-exec-7] c.b.v.event.VentaConfirmadaListener      : No fue posible emitir el documento tributario tras confirmar la venta BP-PRE-2F69F7EB: [400] during [POST] to [http://localhost:8088/api/facturacion/emitir] [FacturacionClient#emitirDocumento(EmitirDocumentoRequestDTO)]: [{"timestamp":"2026-07-15T11:31:46.1547583","status":400,"error":"Bad Request - Incomplete Fiscal Data","message":"El cliente con RUT 19876543-2 no existe en el registro de usuarios.","path":"/api/facturacion/emitir","details":null}]
+2026-07-15T11:32:05.348-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-8] c.b.ventas.service.VentaServiceImpl      : Buscando venta con folio: BP-PRE-2F69F7EB
+Hibernate: 
+    select
+        v1_0.id,
+        v1_0.asistente_nombre,
+        v1_0.cliente_nombre,
+        v1_0.cliente_rut,
+        v1_0.codigo_descuento,
+        v1_0.descuento_aplicado,
+        v1_0.estado,
+        v1_0.fecha,
+        v1_0.folio,
+        v1_0.giro,
+        v1_0.razon_social,
+        v1_0.subtotal,
+        v1_0.sucursal_id,
+        v1_0.tipo_descuento,
+        v1_0.tipo_documento,
+        v1_0.tipo_venta,
+        v1_0.total,
+        v1_0.usuario_id 
+    from
+        ventas v1_0 
+    where
+        v1_0.folio=?
+Hibernate: 
+    select
+        d1_0.venta_id,
+        d1_0.id,
+        d1_0.cantidad,
+        d1_0.precio_unitario,
+        d1_0.producto_id,
+        d1_0.producto_nombre,
+        d1_0.subtotal 
+    from
+        detalles_venta d1_0 
+    where
+        d1_0.venta_id=?
+2026-07-15T11:32:34.457-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] c.b.ventas.service.VentaServiceImpl      : Iniciando registro de venta. Tipo: PRESENCIAL, Canal: Caja
+2026-07-15T11:32:34.541-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] c.b.ventas.service.VentaServiceImpl      : Cliente registrado resuelto: Diego Fuentes (RUT: 20111222-3)
+Hibernate: 
+    insert 
+    into
+        ventas
+        (asistente_nombre, cliente_nombre, cliente_rut, codigo_descuento, descuento_aplicado, estado, fecha, folio, giro, razon_social, subtotal, sucursal_id, tipo_descuento, tipo_documento, tipo_venta, total, usuario_id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        detalles_venta
+        (cantidad, precio_unitario, producto_id, producto_nombre, subtotal, venta_id) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-07-15T11:32:34.570-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] c.b.ventas.service.VentaServiceImpl      : Venta guardada con éxito en la base de datos (Estado: PENDIENTE). Folio: BP-PRE-905B8F74, ID de Venta: 2
+2026-07-15T11:32:34.571-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] c.b.ventas.service.VentaServiceImpl      : Evento VentaRegistradaInternaEvent publicado para folio: BP-PRE-905B8F74
+2026-07-15T11:32:34.620-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] c.b.ventas.service.VentaServiceImpl      : Stock descontado con éxito en ms-inventario. Venta ID: 2 marcada como COMPLETADA.
+Hibernate: 
+    update
+        ventas 
+    set
+        asistente_nombre=?,
+        cliente_nombre=?,
+        cliente_rut=?,
+        codigo_descuento=?,
+        descuento_aplicado=?,
+        estado=?,
+        fecha=?,
+        folio=?,
+        giro=?,
+        razon_social=?,
+        subtotal=?,
+        sucursal_id=?,
+        tipo_descuento=?,
+        tipo_documento=?,
+        tipo_venta=?,
+        total=?,
+        usuario_id=? 
+    where
+        id=?
+2026-07-15T11:32:34.645-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] c.b.v.event.VentaConfirmadaListener      : Venta confirmada y guardada en BD. Iniciando emisión de factura/boleta para folio: BP-PRE-905B8F74
+2026-07-15T11:32:34.662-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-1] c.b.ventas.service.VentaServiceImpl      : Buscando venta con folio: BP-PRE-905B8F74
+Hibernate: 
+    select
+        v1_0.id,
+        v1_0.asistente_nombre,
+        v1_0.cliente_nombre,
+        v1_0.cliente_rut,
+        v1_0.codigo_descuento,
+        v1_0.descuento_aplicado,
+        v1_0.estado,
+        v1_0.fecha,
+        v1_0.folio,
+        v1_0.giro,
+        v1_0.razon_social,
+        v1_0.subtotal,
+        v1_0.sucursal_id,
+        v1_0.tipo_descuento,
+        v1_0.tipo_documento,
+        v1_0.tipo_venta,
+        v1_0.total,
+        v1_0.usuario_id 
+    from
+        ventas v1_0 
+    where
+        v1_0.folio=?
+Hibernate: 
+    select
+        d1_0.venta_id,
+        d1_0.id,
+        d1_0.cantidad,
+        d1_0.precio_unitario,
+        d1_0.producto_id,
+        d1_0.producto_nombre,
+        d1_0.subtotal 
+    from
+        detalles_venta d1_0 
+    where
+        d1_0.venta_id=?
+2026-07-15T11:32:34.956-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] c.b.v.event.VentaConfirmadaListener      : Documento tributario emitido exitosamente para folio BP-PRE-905B8F74: ID 3
+2026-07-15T11:33:51.367-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-4] c.b.ventas.service.VentaServiceImpl      : Buscando venta con ID: 2
+Hibernate: 
+    select
+        v1_0.id,
+        v1_0.asistente_nombre,
+        v1_0.cliente_nombre,
+        v1_0.cliente_rut,
+        v1_0.codigo_descuento,
+        v1_0.descuento_aplicado,
+        v1_0.estado,
+        v1_0.fecha,
+        v1_0.folio,
+        v1_0.giro,
+        v1_0.razon_social,
+        v1_0.subtotal,
+        v1_0.sucursal_id,
+        v1_0.tipo_descuento,
+        v1_0.tipo_documento,
+        v1_0.tipo_venta,
+        v1_0.total,
+        v1_0.usuario_id 
+    from
+        ventas v1_0 
+    where
+        v1_0.id=?
+Hibernate: 
+    select
+        d1_0.venta_id,
+        d1_0.id,
+        d1_0.cantidad,
+        d1_0.precio_unitario,
+        d1_0.producto_id,
+        d1_0.producto_nombre,
+        d1_0.subtotal 
+    from
+        detalles_venta d1_0 
+    where
+        d1_0.venta_id=?
+2026-07-15T11:38:48.115-04:00  WARN 21292 --- [ms-ventas] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m23s330ms121µs100ns).
+2026-07-15T12:19:50.268-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-8] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 473 ms
+2026-07-15T13:19:54.219-04:00  INFO 21292 --- [ms-ventas] [io-8081-exec-10] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 135 ms
+2026-07-15T13:26:58.205-04:00  INFO 21292 --- [ms-ventas] [nio-8081-exec-4] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 103 ms

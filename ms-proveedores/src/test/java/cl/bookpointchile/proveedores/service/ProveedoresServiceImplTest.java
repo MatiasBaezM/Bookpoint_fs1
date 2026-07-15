@@ -141,6 +141,29 @@ class ProveedoresServiceImplTest {
     }
 
     @Test
+    void registrarRecepcion_siInventarioFalla_siguePeroQuedaRecibida() {
+        // El ajuste de stock en ms-inventario es best-effort: si falla, la recepción
+        // igual debe quedar registrada como RECIBIDA en ms-proveedores.
+        DetalleOrden detalle = DetalleOrden.builder()
+                .id(1L).productoId(5L).cantidadSolicitada(20).costoUnitario(new BigDecimal("3000")).build();
+        List<DetalleOrden> detalles = new ArrayList<>();
+        detalles.add(detalle);
+
+        OrdenCompra orden = OrdenCompra.builder()
+                .id(1L).proveedor(proveedor(1L)).estado(EstadoOrden.PENDIENTE).detalles(detalles).build();
+
+        when(ordenCompraRepository.findById(1L)).thenReturn(Optional.of(orden));
+        when(ordenCompraRepository.save(any(OrdenCompra.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(inventarioClient.registrarAjuste(any(AjusteStockRequestDTO.class)))
+                .thenThrow(new RuntimeException("ms-inventario no disponible"));
+
+        OrdenCompraResponseDTO response = proveedoresService.registrarRecepcionMercaderia(1L);
+
+        assertEquals(EstadoOrden.RECIBIDA, response.getEstado());
+        verify(inventarioClient, times(1)).registrarAjuste(any(AjusteStockRequestDTO.class));
+    }
+
+    @Test
     void registrarRecepcionOrdenInexistente_lanzaResourceNotFound() {
         when(ordenCompraRepository.findById(99L)).thenReturn(Optional.empty());
 

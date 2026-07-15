@@ -56,5 +56,105 @@ spring:
             predicates:
               - Path=/api/sucursales/**
 
+          # Rutas hacia los contratos OpenAPI de cada microservicio, para que el
+          # Swagger UI del gateway los consuma desde el mismo origen (sin CORS).
+          - id: api-docs-ventas
+            uri: http://localhost:8081
+            predicates:
+              - Path=/api-docs/ventas
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-inventario
+            uri: http://localhost:8082
+            predicates:
+              - Path=/api-docs/inventario
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-usuarios
+            uri: http://localhost:8083
+            predicates:
+              - Path=/api-docs/usuarios
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-catalogo
+            uri: http://localhost:8084
+            predicates:
+              - Path=/api-docs/catalogo
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-logistica
+            uri: http://localhost:8085
+            predicates:
+              - Path=/api-docs/logistica
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-proveedores
+            uri: http://localhost:8086
+            predicates:
+              - Path=/api-docs/proveedores
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-promociones
+            uri: http://localhost:8087
+            predicates:
+              - Path=/api-docs/promociones
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-facturacion
+            uri: http://localhost:8088
+            predicates:
+              - Path=/api-docs/facturacion
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-bodega
+            uri: http://localhost:8089
+            predicates:
+              - Path=/api-docs/bodega
+            filters:
+              - SetPath=/v3/api-docs
+
+          - id: api-docs-sucursales
+            uri: http://localhost:8090
+            predicates:
+              - Path=/api-docs/sucursales
+            filters:
+              - SetPath=/v3/api-docs
+
+# Swagger UI unificado: un solo visor en el gateway con un desplegable
+# para navegar la documentación de los 10 microservicios.
+springdoc:
+  api-docs:
+    enabled: false # el gateway no expone endpoints propios
+  swagger-ui:
+    urls:
+      - name: ms-ventas
+        url: /api-docs/ventas
+      - name: ms-inventario
+        url: /api-docs/inventario
+      - name: ms-usuarios
+        url: /api-docs/usuarios
+      - name: ms-catalogo
+        url: /api-docs/catalogo
+      - name: ms-logistica
+        url: /api-docs/logistica
+      - name: ms-proveedores
+        url: /api-docs/proveedores
+      - name: ms-promociones
+        url: /api-docs/promociones
+      - name: ms-facturacion
+        url: /api-docs/facturacion
+      - name: ms-bodega
+        url: /api-docs/bodega
+      - name: ms-sucursales
+        url: /api-docs/sucursales
+
 server:
   port: 8080

@@ -55,3 +55,4 @@ Hibernate:
 2026-07-15T11:05:17.752-04:00  WARN 18480 --- [ms-logistica] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
 2026-07-15T11:05:17.753-04:00  WARN 18480 --- [ms-logistica] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
 2026-07-15T11:18:02.324-04:00  WARN 18480 --- [ms-logistica] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m22s632ms465µs400ns).
+2026-07-15T11:38:56.612-04:00  WARN 18480 --- [ms-logistica] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m24s252ms806µs100ns).

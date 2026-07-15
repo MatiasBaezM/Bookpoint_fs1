@@ -74,3 +74,4 @@ Hibernate:
     values
         (?, ?, ?, ?, ?, ?)
 2026-07-15T11:28:55.042-04:00  INFO 18836 --- [ms-catalogo] [nio-8084-exec-4] c.b.c.service.CatalogoServiceImpl        : Producto guardado con éxito. ID asignado: 6
+2026-07-15T11:38:57.311-04:00  WARN 18836 --- [ms-catalogo] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m24s238ms551µs100ns).

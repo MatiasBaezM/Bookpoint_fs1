@@ -193,3 +193,4 @@ Hibernate:
     limit
         ?
 2026-07-15T11:32:51.551-04:00  WARN 18036 --- [ms-facturacion] [nio-8088-exec-2] c.b.f.service.FacturacionServiceImpl     : Intento fallido de emisión: El folio de venta 'BP-PRE-905B8F74' ya tiene un documento emitido.
+2026-07-15T11:38:57.852-04:00  WARN 18036 --- [ms-facturacion] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m22s645ms442µs700ns).

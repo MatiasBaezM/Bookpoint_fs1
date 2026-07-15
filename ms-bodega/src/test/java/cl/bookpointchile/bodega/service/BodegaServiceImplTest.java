@@ -10,6 +10,7 @@ import cl.bookpointchile.bodega.model.OrdenPicking;
 import cl.bookpointchile.bodega.model.UbicacionFisica;
 import cl.bookpointchile.bodega.repository.OrdenPickingRepository;
 import cl.bookpointchile.bodega.repository.UbicacionFisicaRepository;
+import feign.FeignException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -129,6 +130,33 @@ class BodegaServiceImplTest {
         when(pickingRepository.existsByVentaId(100L)).thenReturn(false);
         when(inventarioClient.obtenerStock(1L, 1L))
                 .thenReturn(InventarioResponseDTO.builder().productoId(1L).sucursalId(1L).cantidad(2).build());
+
+        assertThrows(StockInsuficienteException.class,
+                () -> bodegaService.crearOrdenPicking(request));
+        verify(pickingRepository, never()).save(any());
+    }
+
+    @Test
+    void crearOrdenPickingProductoNoRegistradoEnSucursal_lanzaStockInsuficiente() {
+        // ms-inventario responde 404 cuando el producto no tiene registro de stock en esa sucursal.
+        CrearOrdenPickingRequestDTO request = CrearOrdenPickingRequestDTO.builder()
+                .ventaId(100L).sucursalId(1L).productoId(1L).cantidad(2).operarioAsignado("Juan").build();
+        when(ventasClient.obtenerVentaPorId(100L)).thenReturn(ventaMock(100L));
+        when(pickingRepository.existsByVentaId(100L)).thenReturn(false);
+        when(inventarioClient.obtenerStock(1L, 1L)).thenThrow(mock(FeignException.NotFound.class));
+
+        assertThrows(StockInsuficienteException.class,
+                () -> bodegaService.crearOrdenPicking(request));
+        verify(pickingRepository, never()).save(any());
+    }
+
+    @Test
+    void crearOrdenPickingFallaComunicacionConMsInventario_lanzaStockInsuficiente() {
+        CrearOrdenPickingRequestDTO request = CrearOrdenPickingRequestDTO.builder()
+                .ventaId(100L).sucursalId(1L).productoId(1L).cantidad(2).operarioAsignado("Juan").build();
+        when(ventasClient.obtenerVentaPorId(100L)).thenReturn(ventaMock(100L));
+        when(pickingRepository.existsByVentaId(100L)).thenReturn(false);
+        when(inventarioClient.obtenerStock(1L, 1L)).thenThrow(new RuntimeException("Timeout"));
 
         assertThrows(StockInsuficienteException.class,
                 () -> bodegaService.crearOrdenPicking(request));
