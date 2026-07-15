@@ -13,10 +13,12 @@ import cl.bookpointchile.ventas.repository.VentaRepository;
 import cl.bookpointchile.ventas.event.VentaCreadaEvent;
 import cl.bookpointchile.ventas.event.DetalleVentaEvent;
 import cl.bookpointchile.ventas.config.RabbitMQConfig;
+import cl.bookpointchile.ventas.event.VentaRegistradaInternaEvent;
 import feign.FeignException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,7 @@ public class VentaServiceImpl implements VentaService {
     private final PromocionClient promocionClient;
     private final FacturacionClient facturacionClient;
     private final UsuarioClient usuarioClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -181,7 +184,7 @@ public class VentaServiceImpl implements VentaService {
         log.info("Venta guardada con éxito en la base de datos (Estado: PENDIENTE). Folio: {}, ID de Venta: {}", 
                 ventaGuardada.getFolio(), ventaGuardada.getId());
 
-        // 7. Emisión de Documento Tributario (Boleta o Factura) vía Feign con ms-facturacion (best-effort, no bloqueante)
+        // 7. Publicar evento interno para emisión del documento tributario tras confirmar la venta (Fuera de la transacción principal)
         try {
             EmitirDocumentoRequestDTO facturaRequest = EmitirDocumentoRequestDTO.builder()
                     .folioVenta(ventaGuardada.getFolio())
@@ -192,10 +195,10 @@ public class VentaServiceImpl implements VentaService {
                     .razonSocial(ventaGuardada.getRazonSocial())
                     .giro(ventaGuardada.getGiro())
                     .build();
-            DocumentoResponseDTO documento = facturacionClient.emitirDocumento(facturaRequest);
-            log.info("Documento tributario emitido para folio {}: ID {}", ventaGuardada.getFolio(), documento.getId());
+            eventPublisher.publishEvent(new VentaRegistradaInternaEvent(this, facturaRequest));
+            log.info("Evento VentaRegistradaInternaEvent publicado para folio: {}", ventaGuardada.getFolio());
         } catch (Exception e) {
-            log.warn("No fue posible emitir el documento tributario para la venta {}: {}", ventaGuardada.getFolio(), e.getMessage());
+            log.warn("No fue posible preparar el evento de documento tributario para la venta {}: {}", ventaGuardada.getFolio(), e.getMessage());
         }
 
         // 8. Emitir Evento VentaCreada para MS-Inventario

@@ -44,6 +44,8 @@ class VentaServiceImplTest {
     private FacturacionClient facturacionClient;
     @Mock
     private UsuarioClient usuarioClient;
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private VentaServiceImpl ventaService;
@@ -93,6 +95,7 @@ class VentaServiceImplTest {
         verify(ventaRepository, times(1)).save(any(Venta.class));
         // Se emite el evento VentaCreada a RabbitMQ
         verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), any(Object.class));
+        verify(eventPublisher, times(1)).publishEvent(any());
     }
 
     @Test

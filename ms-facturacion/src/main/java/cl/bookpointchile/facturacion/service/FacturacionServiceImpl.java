@@ -64,7 +64,8 @@ public class FacturacionServiceImpl implements FacturacionService {
             log.error("Venta no encontrada en ms-ventas con folio: '{}'", folioUpper);
             throw new DatosFacturacionIncompletosException("La venta con el folio '" + request.getFolioVenta() + "' no existe en el sistema de ventas.");
         } catch (Exception e) {
-            log.warn("No fue posible comunicarse con ms-ventas para validar la venta. Continuando en modo degradado: {}", e.getMessage());
+            log.error("No fue posible comunicarse con ms-ventas para validar la venta: {}", e.getMessage());
+            throw new DatosFacturacionIncompletosException("No fue posible validar la existencia del folio de venta '" + request.getFolioVenta() + "' debido a problemas de comunicación.");
         }
 
         // 3. Validar existencia del cliente (si no es el RUT genérico)
