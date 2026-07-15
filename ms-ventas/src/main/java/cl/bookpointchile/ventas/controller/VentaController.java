@@ -42,4 +42,10 @@ public class VentaController {
         List<VentaResponseDTO> response = ventaService.obtenerVentasPorUsuario(usuarioId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<VentaResponseDTO> obtenerVentaPorId(@PathVariable Long id) {
+        VentaResponseDTO response = ventaService.obtenerVentaPorId(id);
+        return ResponseEntity.ok(response);
+    }
 }

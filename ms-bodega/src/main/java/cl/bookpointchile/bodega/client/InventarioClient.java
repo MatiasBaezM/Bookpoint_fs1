@@ -20,4 +20,10 @@ public interface InventarioClient {
 
     @PutMapping("/api/inventario/ajuste")
     InventarioResponseDTO registrarAjuste(@RequestBody AjusteStockRequestDTO request);
+
+    @GetMapping("/api/inventario/{sucursalId}/producto/{productoId}")
+    InventarioResponseDTO obtenerStock(
+            @org.springframework.web.bind.annotation.PathVariable("sucursalId") Long sucursalId,
+            @org.springframework.web.bind.annotation.PathVariable("productoId") Long productoId
+    );
 }

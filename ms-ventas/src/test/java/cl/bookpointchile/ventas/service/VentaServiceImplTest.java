@@ -280,4 +280,31 @@ class VentaServiceImplTest {
         assertEquals(5L, response.get(0).getUsuarioId());
         verify(ventaRepository, times(1)).findByUsuarioId(5L);
     }
+
+    @Test
+    void obtenerVentaPorIdExistente_retornaVenta() {
+        // Given
+        Venta venta = Venta.builder()
+                .id(10L).folio("BP-ONL-1010").tipoVenta(TipoVenta.ONLINE).usuarioId(5L)
+                .subtotal(new BigDecimal("5000")).total(new BigDecimal("5000"))
+                .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
+                .build();
+        when(ventaRepository.findById(10L)).thenReturn(Optional.of(venta));
+
+        // When
+        VentaResponseDTO response = ventaService.obtenerVentaPorId(10L);
+
+        // Then
+        assertEquals(10L, response.getId());
+        assertEquals("BP-ONL-1010", response.getFolio());
+    }
+
+    @Test
+    void obtenerVentaPorIdInexistente_lanzaResourceNotFound() {
+        // Given
+        when(ventaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When + Then
+        assertThrows(ResourceNotFoundException.class, () -> ventaService.obtenerVentaPorId(999L));
+    }
 }

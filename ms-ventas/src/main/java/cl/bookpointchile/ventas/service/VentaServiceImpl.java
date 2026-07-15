@@ -248,6 +248,18 @@ public class VentaServiceImpl implements VentaService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public VentaResponseDTO obtenerVentaPorId(Long id) {
+        log.info("Buscando venta con ID: {}", id);
+        Venta venta = ventaRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Venta no encontrada con ID: {}", id);
+                    return new ResourceNotFoundException("La venta con el ID '" + id + "' no existe.");
+                });
+        return mapToResponse(venta);
+    }
+
     // Mapper manual Helper para mantener el diseño CSR libre de acoplamientos pesados
     private VentaResponseDTO mapToResponse(Venta venta) {
         List<DetalleVentaResponseDTO> detalleDTOs = venta.getDetalles().stream()

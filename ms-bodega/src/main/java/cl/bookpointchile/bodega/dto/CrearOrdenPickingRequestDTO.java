@@ -17,6 +17,9 @@ public class CrearOrdenPickingRequestDTO {
     @NotNull(message = "El ID de la venta es obligatorio")
     private Long ventaId;
 
+    @NotNull(message = "El ID de la sucursal es obligatorio")
+    private Long sucursalId;
+
     @NotNull(message = "El ID del producto es obligatorio")
     private Long productoId;
 

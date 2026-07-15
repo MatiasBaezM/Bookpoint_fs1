@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class OrdenPickingResponseDTO {
     private Long id;
     private Long ventaId;
+    private Long sucursalId;
     private Long productoId;
     private Integer cantidad;
     private String operarioAsignado;

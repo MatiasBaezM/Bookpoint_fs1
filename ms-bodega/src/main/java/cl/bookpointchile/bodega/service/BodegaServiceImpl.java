@@ -1,12 +1,8 @@
 package cl.bookpointchile.bodega.service;
 
 import cl.bookpointchile.bodega.client.InventarioClient;
-import cl.bookpointchile.bodega.dto.AjusteStockRequestDTO;
-import cl.bookpointchile.bodega.dto.CrearOrdenPickingRequestDTO;
-import cl.bookpointchile.bodega.dto.OrdenPickingResponseDTO;
-import cl.bookpointchile.bodega.dto.StockResponseDTO;
-import cl.bookpointchile.bodega.dto.UbicacionRequestDTO;
-import cl.bookpointchile.bodega.dto.UbicacionResponseDTO;
+import cl.bookpointchile.bodega.client.VentasClient;
+import cl.bookpointchile.bodega.dto.*;
 import cl.bookpointchile.bodega.exception.EstadoPickingInvalidoException;
 import cl.bookpointchile.bodega.exception.OrdenPickingNoEncontradaException;
 import cl.bookpointchile.bodega.exception.StockInsuficienteException;
@@ -15,6 +11,7 @@ import cl.bookpointchile.bodega.model.OrdenPicking;
 import cl.bookpointchile.bodega.model.UbicacionFisica;
 import cl.bookpointchile.bodega.repository.OrdenPickingRepository;
 import cl.bookpointchile.bodega.repository.UbicacionFisicaRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,9 +30,7 @@ public class BodegaServiceImpl implements BodegaService {
     private final UbicacionFisicaRepository ubicacionRepository;
     private final OrdenPickingRepository pickingRepository;
     private final InventarioClient inventarioClient;
-
-    @Value("${app.bodega.sucursal-central-id}")
-    private Long sucursalCentralId;
+    private final VentasClient ventasClient;
 
     @Override
     @Transactional
@@ -64,25 +59,50 @@ public class BodegaServiceImpl implements BodegaService {
     @Override
     @Transactional
     public OrdenPickingResponseDTO crearOrdenPicking(CrearOrdenPickingRequestDTO request) {
-        log.info("Creando orden de picking para la venta ID: {}, Producto ID: {}, Cantidad: {}, Asignada al operario: '{}'",
-                request.getVentaId(), request.getProductoId(), request.getCantidad(), request.getOperarioAsignado());
+        log.info("Creando orden de picking para la venta ID: {}, Sucursal ID: {}, Producto ID: {}, Cantidad: {}, Asignada al operario: '{}'",
+                request.getVentaId(), request.getSucursalId(), request.getProductoId(), request.getCantidad(), request.getOperarioAsignado());
 
+        // 1. Validar que la venta exista en ms-ventas
+        try {
+            VentaResponseDTO venta = ventasClient.obtenerVentaPorId(request.getVentaId());
+            if (venta == null) {
+                throw new EstadoPickingInvalidoException("No se puede generar la orden de picking. La venta con ID " + request.getVentaId() + " no fue encontrada.");
+            }
+        } catch (Exception e) {
+            log.error("Validación de venta fallida para venta ID {}: {}", request.getVentaId(), e.getMessage());
+            throw new EstadoPickingInvalidoException("No se puede generar la orden de picking. La venta con ID " + request.getVentaId() + " no existe.");
+        }
+
+        // 2. Validar que no exista ya un picking para esta venta
         if (pickingRepository.existsByVentaId(request.getVentaId())) {
             log.warn("Creación de Picking fallida: La venta ID: {} ya posee una orden de picking.", request.getVentaId());
             throw new EstadoPickingInvalidoException("La orden de picking para la venta con ID '" + request.getVentaId() + "' ya se encuentra registrada.");
         }
 
-        // Verificación de stock disponible en ms-inventario antes de generar la orden de picking
-        StockResponseDTO stock = inventarioClient.checkStock(request.getProductoId(), request.getCantidad());
-        if (!stock.isDisponible()) {
-            log.warn("Creación de Picking rechazada: Stock insuficiente para el producto ID {}. Disponible: {}, Solicitado: {}",
-                    request.getProductoId(), stock.getStockActual(), request.getCantidad());
+        // 3. Verificación de stock disponible en la sucursal específica en ms-inventario antes de generar la orden de picking
+        InventarioResponseDTO stock;
+        try {
+            stock = inventarioClient.obtenerStock(request.getSucursalId(), request.getProductoId());
+        } catch (FeignException.NotFound e) {
+            log.warn("Creación de Picking rechazada: Producto ID {} no tiene registro de stock en sucursal ID {}",
+                    request.getProductoId(), request.getSucursalId());
+            throw new StockInsuficienteException("No es posible generar la orden de picking. El producto no está registrado en el inventario de la sucursal.");
+        } catch (Exception e) {
+            log.error("Error al obtener stock para sucursal ID {} y producto ID {}: {}", request.getSucursalId(), request.getProductoId(), e.getMessage());
+            throw new StockInsuficienteException("No es posible generar la orden de picking debido a un error de comunicación.");
+        }
+
+        if (stock == null || stock.getCantidad() < request.getCantidad()) {
+            int disponible = stock != null ? stock.getCantidad() : 0;
+            log.warn("Creación de Picking rechazada: Stock insuficiente en sucursal ID {} para el producto ID {}. Disponible: {}, Solicitado: {}",
+                    request.getSucursalId(), request.getProductoId(), disponible, request.getCantidad());
             throw new StockInsuficienteException("No es posible generar la orden de picking. Stock insuficiente para el producto ID " +
-                    request.getProductoId() + ". Disponible: " + stock.getStockActual() + ", Solicitado: " + request.getCantidad());
+                    request.getProductoId() + " en la sucursal seleccionada. Disponible: " + disponible + ", Solicitado: " + request.getCantidad());
         }
 
         OrdenPicking orden = OrdenPicking.builder()
                 .ventaId(request.getVentaId())
+                .sucursalId(request.getSucursalId())
                 .productoId(request.getProductoId())
                 .cantidad(request.getCantidad())
                 .operarioAsignado(request.getOperarioAsignado().trim())
@@ -91,8 +111,8 @@ public class BodegaServiceImpl implements BodegaService {
                 .build();
 
         OrdenPicking saved = pickingRepository.save(orden);
-        log.info("Orden de picking creada con éxito. ID: {}, Venta: {}, Estado: {}", 
-                saved.getId(), saved.getVentaId(), saved.getEstado());
+        log.info("Orden de picking creada con éxito. ID: {}, Venta: {}, Sucursal: {}, Estado: {}", 
+                saved.getId(), saved.getVentaId(), saved.getSucursalId(), saved.getEstado());
         return mapToPickingResponse(saved);
     }
 
@@ -156,13 +176,13 @@ public class BodegaServiceImpl implements BodegaService {
         try {
             AjusteStockRequestDTO ajuste = AjusteStockRequestDTO.builder()
                     .productoId(orden.getProductoId())
-                    .sucursalId(sucursalCentralId)
+                    .sucursalId(orden.getSucursalId())
                     .cantidadAjuste(-orden.getCantidad())
                     .motivo("Picking completado - venta " + orden.getVentaId())
                     .build();
             inventarioClient.registrarAjuste(ajuste);
-            log.info("Stock descontado en ms-inventario por picking completado. Venta ID: {}, Producto ID: {}, Cantidad: {}",
-                    orden.getVentaId(), orden.getProductoId(), orden.getCantidad());
+            log.info("Stock descontado en ms-inventario por picking completado. Venta ID: {}, Producto ID: {}, Sucursal ID: {}, Cantidad: {}",
+                    orden.getVentaId(), orden.getProductoId(), orden.getSucursalId(), orden.getCantidad());
         } catch (Exception e) {
             log.warn("No fue posible descontar el stock en ms-inventario para la venta ID {}: {}", orden.getVentaId(), e.getMessage());
         }
@@ -201,6 +221,7 @@ public class BodegaServiceImpl implements BodegaService {
         return OrdenPickingResponseDTO.builder()
                 .id(o.getId())
                 .ventaId(o.getVentaId())
+                .sucursalId(o.getSucursalId())
                 .productoId(o.getProductoId())
                 .cantidad(o.getCantidad())
                 .operarioAsignado(o.getOperarioAsignado())

@@ -1,6 +1,7 @@
 package cl.bookpointchile.bodega.service;
 
 import cl.bookpointchile.bodega.client.InventarioClient;
+import cl.bookpointchile.bodega.client.VentasClient;
 import cl.bookpointchile.bodega.dto.*;
 import cl.bookpointchile.bodega.exception.EstadoPickingInvalidoException;
 import cl.bookpointchile.bodega.exception.OrdenPickingNoEncontradaException;
@@ -20,8 +21,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,12 +32,18 @@ class BodegaServiceImplTest {
     private OrdenPickingRepository pickingRepository;
     @Mock
     private InventarioClient inventarioClient;
+    @Mock
+    private VentasClient ventasClient;
 
     @InjectMocks
     private BodegaServiceImpl bodegaService;
 
-    private StockResponseDTO stockDisponible() {
-        return StockResponseDTO.builder().productoId(1L).disponible(true).stockActual(50).build();
+    private InventarioResponseDTO inventarioDisponible() {
+        return InventarioResponseDTO.builder().productoId(1L).sucursalId(1L).cantidad(50).build();
+    }
+
+    private VentaResponseDTO ventaMock(Long id) {
+        return VentaResponseDTO.builder().id(id).folio("BP-ONL-1010").build();
     }
 
     // ---------- registrarUbicacion ----------
@@ -76,9 +81,10 @@ class BodegaServiceImplTest {
     @Test
     void crearOrdenPicking_conStock_guardaOrden() {
         CrearOrdenPickingRequestDTO request = CrearOrdenPickingRequestDTO.builder()
-                .ventaId(100L).productoId(1L).cantidad(2).operarioAsignado("Juan Pérez").build();
+                .ventaId(100L).sucursalId(1L).productoId(1L).cantidad(2).operarioAsignado("Juan Pérez").build();
+        when(ventasClient.obtenerVentaPorId(100L)).thenReturn(ventaMock(100L));
         when(pickingRepository.existsByVentaId(100L)).thenReturn(false);
-        when(inventarioClient.checkStock(1L, 2)).thenReturn(stockDisponible());
+        when(inventarioClient.obtenerStock(1L, 1L)).thenReturn(inventarioDisponible());
         when(pickingRepository.save(any(OrdenPicking.class))).thenAnswer(inv -> {
             OrdenPicking o = inv.getArgument(0);
             o.setId(1L);
@@ -89,12 +95,25 @@ class BodegaServiceImplTest {
 
         assertEquals("PENDIENTE", response.getEstado());
         assertEquals(100L, response.getVentaId());
+        assertEquals(1L, response.getSucursalId());
+    }
+
+    @Test
+    void crearOrdenPickingVentaInexistente_lanzaExcepcion() {
+        CrearOrdenPickingRequestDTO request = CrearOrdenPickingRequestDTO.builder()
+                .ventaId(100L).sucursalId(1L).productoId(1L).cantidad(2).operarioAsignado("Juan").build();
+        when(ventasClient.obtenerVentaPorId(100L)).thenThrow(new RuntimeException("Not found"));
+
+        assertThrows(EstadoPickingInvalidoException.class,
+                () -> bodegaService.crearOrdenPicking(request));
+        verify(pickingRepository, never()).save(any());
     }
 
     @Test
     void crearOrdenPickingVentaDuplicada_lanzaExcepcion() {
         CrearOrdenPickingRequestDTO request = CrearOrdenPickingRequestDTO.builder()
-                .ventaId(100L).productoId(1L).cantidad(2).operarioAsignado("Juan").build();
+                .ventaId(100L).sucursalId(1L).productoId(1L).cantidad(2).operarioAsignado("Juan").build();
+        when(ventasClient.obtenerVentaPorId(100L)).thenReturn(ventaMock(100L));
         when(pickingRepository.existsByVentaId(100L)).thenReturn(true);
 
         assertThrows(EstadoPickingInvalidoException.class,
@@ -105,10 +124,11 @@ class BodegaServiceImplTest {
     @Test
     void crearOrdenPickingSinStock_lanzaStockInsuficiente() {
         CrearOrdenPickingRequestDTO request = CrearOrdenPickingRequestDTO.builder()
-                .ventaId(100L).productoId(1L).cantidad(99).operarioAsignado("Juan").build();
+                .ventaId(100L).sucursalId(1L).productoId(1L).cantidad(99).operarioAsignado("Juan").build();
+        when(ventasClient.obtenerVentaPorId(100L)).thenReturn(ventaMock(100L));
         when(pickingRepository.existsByVentaId(100L)).thenReturn(false);
-        when(inventarioClient.checkStock(1L, 99))
-                .thenReturn(StockResponseDTO.builder().disponible(false).stockActual(2).build());
+        when(inventarioClient.obtenerStock(1L, 1L))
+                .thenReturn(InventarioResponseDTO.builder().productoId(1L).sucursalId(1L).cantidad(2).build());
 
         assertThrows(StockInsuficienteException.class,
                 () -> bodegaService.crearOrdenPicking(request));
@@ -119,13 +139,26 @@ class BodegaServiceImplTest {
 
     @Test
     void actualizarEstadoPickingPendienteAEnProceso_actualiza() {
-        OrdenPicking orden = OrdenPicking.builder().id(1L).ventaId(100L).estado("PENDIENTE").build();
+        OrdenPicking orden = OrdenPicking.builder().id(1L).ventaId(100L).sucursalId(1L).estado("PENDIENTE").build();
         when(pickingRepository.findById(1L)).thenReturn(Optional.of(orden));
         when(pickingRepository.save(any(OrdenPicking.class))).thenAnswer(inv -> inv.getArgument(0));
 
         OrdenPickingResponseDTO response = bodegaService.actualizarEstadoPicking(1L, "EN_PROCESO");
 
         assertEquals("EN_PROCESO", response.getEstado());
+    }
+
+    @Test
+    void actualizarEstadoPickingEnProcesoACompletada_actualizaYDescuenta() {
+        OrdenPicking orden = OrdenPicking.builder().id(1L).ventaId(100L).sucursalId(1L).productoId(5L).cantidad(3).estado("EN_PROCESO").build();
+        when(pickingRepository.findById(1L)).thenReturn(Optional.of(orden));
+        when(pickingRepository.save(any(OrdenPicking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(inventarioClient.registrarAjuste(any())).thenReturn(InventarioResponseDTO.builder().build());
+
+        OrdenPickingResponseDTO response = bodegaService.actualizarEstadoPicking(1L, "COMPLETADA");
+
+        assertEquals("COMPLETADA", response.getEstado());
+        verify(inventarioClient, times(1)).registrarAjuste(any());
     }
 
     @Test

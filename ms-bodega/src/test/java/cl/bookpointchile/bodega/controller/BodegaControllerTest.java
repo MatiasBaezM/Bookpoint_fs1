@@ -66,7 +66,7 @@ class BodegaControllerTest {
     @Test
     void crearOrdenPicking_retorna201() throws Exception {
         CrearOrdenPickingRequestDTO request = CrearOrdenPickingRequestDTO.builder()
-                .ventaId(100L).productoId(1L).cantidad(2).operarioAsignado("Juan").build();
+                .ventaId(100L).sucursalId(1L).productoId(1L).cantidad(2).operarioAsignado("Juan").build();
         Mockito.when(bodegaService.crearOrdenPicking(any()))
                 .thenReturn(OrdenPickingResponseDTO.builder().id(1L).ventaId(100L).estado("PENDIENTE").build());
 

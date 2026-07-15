@@ -30,4 +30,14 @@ public class InventarioClientFallback implements InventarioClient {
                 .cantidad(request.getCantidadAjuste())
                 .build();
     }
+
+    @Override
+    public InventarioResponseDTO obtenerStock(Long sucursalId, Long productoId) {
+        log.warn("ms-inventario no disponible. Aplicando fallback de stock para sucursal ID {} y producto ID {}.", sucursalId, productoId);
+        return InventarioResponseDTO.builder()
+                .productoId(productoId)
+                .sucursalId(sucursalId)
+                .cantidad(100) // Valor alto simulado para no bloquear ante caídas transitorias
+                .build();
+    }
 }
