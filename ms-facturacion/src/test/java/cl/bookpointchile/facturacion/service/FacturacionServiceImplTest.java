@@ -1,7 +1,11 @@
 package cl.bookpointchile.facturacion.service;
 
+import cl.bookpointchile.facturacion.client.UsuariosClient;
+import cl.bookpointchile.facturacion.client.VentasClient;
 import cl.bookpointchile.facturacion.dto.DocumentoResponseDTO;
 import cl.bookpointchile.facturacion.dto.EmitirDocumentoRequestDTO;
+import cl.bookpointchile.facturacion.dto.UsuarioResponseDTO;
+import cl.bookpointchile.facturacion.dto.VentaResponseDTO;
 import cl.bookpointchile.facturacion.exception.DatosFacturacionIncompletosException;
 import cl.bookpointchile.facturacion.exception.DocumentoDuplicadoException;
 import cl.bookpointchile.facturacion.exception.DocumentoNoEncontradoException;
@@ -26,6 +30,12 @@ class FacturacionServiceImplTest {
     @Mock
     private DocumentoTributarioRepository repository;
 
+    @Mock
+    private VentasClient ventasClient;
+
+    @Mock
+    private UsuariosClient usuariosClient;
+
     @InjectMocks
     private FacturacionServiceImpl facturacionService;
 
@@ -36,7 +46,17 @@ class FacturacionServiceImplTest {
         EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
                 .folioVenta("bp-pre-0001").rutCliente("19876543-2")
                 .tipoDocumento("boleta").montoNeto(10000.0).build();
+
+        VentaResponseDTO mockVenta = VentaResponseDTO.builder()
+                .folio("BP-PRE-0001").total(11900.0).clienteRut("19876543-2").tipoDocumento("BOLETA").estado("COMPLETA").build();
+
+        UsuarioResponseDTO mockUsuario = UsuarioResponseDTO.builder()
+                .rut("19876543-2").estado("ACTIVO").build();
+
         when(repository.existsByFolioVenta("BP-PRE-0001")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-0001")).thenReturn(mockVenta);
+        when(usuariosClient.obtenerUsuarioPorRut("19876543-2")).thenReturn(mockUsuario);
+
         when(repository.save(any(DocumentoTributario.class))).thenAnswer(inv -> {
             DocumentoTributario d = inv.getArgument(0);
             d.setId(1L);
@@ -45,7 +65,6 @@ class FacturacionServiceImplTest {
 
         DocumentoResponseDTO response = facturacionService.emitirDocumento(request);
 
-        // IVA 19% de 10000 = 1900, total 11900
         assertEquals(1900.0, response.getMontoIva());
         assertEquals(11900.0, response.getMontoTotal());
         assertEquals("BOLETA", response.getTipoDocumento());
@@ -56,8 +75,17 @@ class FacturacionServiceImplTest {
     void emitirFacturaSinRazonSocial_lanzaDatosIncompletos() {
         EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
                 .folioVenta("BP-ONL-0002").rutCliente("76543210-K")
-                .tipoDocumento("FACTURA").montoNeto(20000.0).build(); // sin razonSocial/giro
+                .tipoDocumento("FACTURA").montoNeto(20000.0).build();
+
+        VentaResponseDTO mockVenta = VentaResponseDTO.builder()
+                .folio("BP-ONL-0002").total(23800.0).clienteRut("76543210-K").tipoDocumento("FACTURA").estado("COMPLETA").build();
+
+        UsuarioResponseDTO mockUsuario = UsuarioResponseDTO.builder()
+                .rut("76543210-K").estado("ACTIVO").build();
+
         when(repository.existsByFolioVenta("BP-ONL-0002")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-ONL-0002")).thenReturn(mockVenta);
+        when(usuariosClient.obtenerUsuarioPorRut("76543210-K")).thenReturn(mockUsuario);
 
         assertThrows(DatosFacturacionIncompletosException.class,
                 () -> facturacionService.emitirDocumento(request));
@@ -81,7 +109,16 @@ class FacturacionServiceImplTest {
         EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
                 .folioVenta("BP-PRE-0003").rutCliente("1-9")
                 .tipoDocumento("VALE").montoNeto(5000.0).build();
+
+        VentaResponseDTO mockVenta = VentaResponseDTO.builder()
+                .folio("BP-PRE-0003").total(5950.0).clienteRut("1-9").tipoDocumento("BOLETA").estado("COMPLETA").build();
+
+        UsuarioResponseDTO mockUsuario = UsuarioResponseDTO.builder()
+                .rut("1-9").estado("ACTIVO").build();
+
         when(repository.existsByFolioVenta("BP-PRE-0003")).thenReturn(false);
+        when(ventasClient.obtenerVentaPorFolio("BP-PRE-0003")).thenReturn(mockVenta);
+        when(usuariosClient.obtenerUsuarioPorRut("1-9")).thenReturn(mockUsuario);
 
         assertThrows(DatosFacturacionIncompletosException.class,
                 () -> facturacionService.emitirDocumento(request));

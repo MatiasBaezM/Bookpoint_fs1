@@ -1,5 +1,6 @@
 package cl.bookpointchile.proveedores.service;
 
+import cl.bookpointchile.proveedores.client.InventarioClient;
 import cl.bookpointchile.proveedores.dto.*;
 import cl.bookpointchile.proveedores.exception.OrdenCompraInvalidaException;
 import cl.bookpointchile.proveedores.exception.ProveedorNoEncontradoException;
@@ -9,6 +10,7 @@ import cl.bookpointchile.proveedores.repository.OrdenCompraRepository;
 import cl.bookpointchile.proveedores.repository.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,10 @@ public class ProveedoresServiceImpl implements ProveedoresService {
 
     private final ProveedorRepository proveedorRepository;
     private final OrdenCompraRepository ordenCompraRepository;
+    private final InventarioClient inventarioClient;
+
+    @Value("${app.proveedores.sucursal-destino-id:1}")
+    private Long sucursalDestinoId;
 
     @Override
     @Transactional
@@ -125,6 +131,24 @@ public class ProveedoresServiceImpl implements ProveedoresService {
         orden.setEstado(EstadoOrden.RECIBIDA);
         OrdenCompra saved = ordenCompraRepository.save(orden);
         log.info("Recepción de mercadería registrada con éxito para ODC ID: {}. Estado actualizado a RECIBIDA.", saved.getId());
+
+        // Incrementar el stock físico en ms-inventario para cada libro en la orden (best-effort, no bloqueante)
+        for (DetalleOrden detalle : saved.getDetalles()) {
+            try {
+                AjusteStockRequestDTO ajuste = AjusteStockRequestDTO.builder()
+                        .productoId(detalle.getProductoId())
+                        .sucursalId(sucursalDestinoId)
+                        .cantidadAjuste(detalle.getCantidadSolicitada())
+                        .motivo("Recepción de mercadería - ODC " + saved.getId())
+                        .build();
+                inventarioClient.registrarAjuste(ajuste);
+                log.info("Stock incrementado en ms-inventario para Producto ID: {}, Sucursal ID: {}, Cantidad: {}", 
+                        detalle.getProductoId(), sucursalDestinoId, detalle.getCantidadSolicitada());
+            } catch (Exception e) {
+                log.warn("No fue posible actualizar stock en ms-inventario para Producto ID {} en la ODC {}: {}", 
+                        detalle.getProductoId(), saved.getId(), e.getMessage());
+            }
+        }
 
         return mapToOdcResponse(saved);
     }

@@ -31,6 +31,12 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/rut/{rut}")
+    public ResponseEntity<UsuarioResponseDTO> obtenerUsuarioPorRut(@PathVariable String rut) {
+        UsuarioResponseDTO response = usuarioService.obtenerUsuarioPorRut(rut);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/{id}/rol")
     public ResponseEntity<UsuarioResponseDTO> actualizarRol(
             @PathVariable Long id,

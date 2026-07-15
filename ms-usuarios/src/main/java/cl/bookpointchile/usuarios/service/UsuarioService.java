@@ -7,5 +7,6 @@ import cl.bookpointchile.usuarios.dto.UsuarioResponseDTO;
 public interface UsuarioService {
     UsuarioResponseDTO registrarUsuario(UsuarioRegistroRequestDTO request);
     UsuarioResponseDTO obtenerUsuarioPorId(Long id);
+    UsuarioResponseDTO obtenerUsuarioPorRut(String rut);
     UsuarioResponseDTO actualizarRol(Long id, ActualizarRolRequestDTO request);
 }

@@ -129,6 +129,18 @@ public class VentaServiceImpl implements VentaService {
             total = BigDecimal.ZERO;
         }
 
+        // Validar tipo de documento solicitado
+        String docType = request.getTipoDocumento() != null ? request.getTipoDocumento().trim().toUpperCase() : "BOLETA";
+        if (!"BOLETA".equals(docType) && !"FACTURA".equals(docType)) {
+            throw new InvalidSaleException("El tipo de documento debe ser 'BOLETA' o 'FACTURA'.");
+        }
+        if ("FACTURA".equals(docType)) {
+            if (request.getRazonSocial() == null || request.getRazonSocial().trim().isEmpty() ||
+                request.getGiro() == null || request.getGiro().trim().isEmpty()) {
+                throw new InvalidSaleException("Para emitir una FACTURA, la Razón Social y el Giro del negocio son campos obligatorios.");
+            }
+        }
+
         // 5. Generar Entidad Venta y Detalles (Bidireccional)
         String folioUnico = "BP-" + request.getTipoVenta().name().substring(0, 3) + "-" + 
                 UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -146,6 +158,9 @@ public class VentaServiceImpl implements VentaService {
                 .tipoDescuento(tipoDescuento)
                 .codigoDescuento(tipoDescuento != TipoDescuento.NINGUNO ? codigo.trim().toUpperCase() : null)
                 .estado(EstadoVenta.PENDIENTE)
+                .tipoDocumento(docType)
+                .razonSocial("FACTURA".equals(docType) ? request.getRazonSocial().trim().toUpperCase() : null)
+                .giro("FACTURA".equals(docType) ? request.getGiro().trim().toUpperCase() : null)
                 .total(total)
                 .build();
 
@@ -166,14 +181,16 @@ public class VentaServiceImpl implements VentaService {
         log.info("Venta guardada con éxito en la base de datos (Estado: PENDIENTE). Folio: {}, ID de Venta: {}", 
                 ventaGuardada.getFolio(), ventaGuardada.getId());
 
-        // 7. Emisión de Documento Tributario (Boleta) vía Feign con ms-facturacion (best-effort, no bloqueante)
+        // 7. Emisión de Documento Tributario (Boleta o Factura) vía Feign con ms-facturacion (best-effort, no bloqueante)
         try {
             EmitirDocumentoRequestDTO facturaRequest = EmitirDocumentoRequestDTO.builder()
                     .folioVenta(ventaGuardada.getFolio())
                     .rutCliente(ventaGuardada.getClienteRut() != null && !ventaGuardada.getClienteRut().trim().isEmpty()
                             ? ventaGuardada.getClienteRut() : RUT_CLIENTE_GENERICO)
-                    .tipoDocumento("BOLETA")
-                    .montoNeto(ventaGuardada.getTotal().doubleValue())
+                    .tipoDocumento(ventaGuardada.getTipoDocumento())
+                    .montoNeto((double) Math.round(ventaGuardada.getTotal().doubleValue() / 1.19)) // Neto real de la venta
+                    .razonSocial(ventaGuardada.getRazonSocial())
+                    .giro(ventaGuardada.getGiro())
                     .build();
             DocumentoResponseDTO documento = facturacionClient.emitirDocumento(facturaRequest);
             log.info("Documento tributario emitido para folio {}: ID {}", ventaGuardada.getFolio(), documento.getId());
@@ -259,6 +276,9 @@ public class VentaServiceImpl implements VentaService {
                 .tipoDescuento(venta.getTipoDescuento())
                 .codigoDescuento(venta.getCodigoDescuento())
                 .total(venta.getTotal())
+                .tipoDocumento(venta.getTipoDocumento())
+                .razonSocial(venta.getRazonSocial())
+                .giro(venta.getGiro())
                 .detalles(detalleDTOs)
                 .build();
     }

@@ -25,6 +25,9 @@ public class VentaRequestDTO {
     private String clienteRut;
     private String asistenteNombre; // Obligatorio para ventas presenciales en caja
     private String codigoDescuento; // Cupones o convenios (ej: 'DESCUENTO10', 'CONVENIO_ESTUDIANTIL')
+    private String tipoDocumento; // BOLETA o FACTURA
+    private String razonSocial;
+    private String giro;
 
     @NotEmpty(message = "La venta debe incluir al menos un detalle de producto")
     @Valid

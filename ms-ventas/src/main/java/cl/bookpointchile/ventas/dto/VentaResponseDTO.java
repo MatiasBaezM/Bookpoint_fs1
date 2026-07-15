@@ -30,5 +30,8 @@ public class VentaResponseDTO {
     private String codigoDescuento;
     private BigDecimal subtotal;
     private BigDecimal total;
+    private String tipoDocumento;
+    private String razonSocial;
+    private String giro;
     private List<DetalleVentaResponseDTO> detalles;
 }

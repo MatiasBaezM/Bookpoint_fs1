@@ -1,9 +1,11 @@
 package cl.bookpointchile.proveedores.service;
 
+import cl.bookpointchile.proveedores.client.InventarioClient;
 import cl.bookpointchile.proveedores.dto.*;
 import cl.bookpointchile.proveedores.exception.OrdenCompraInvalidaException;
 import cl.bookpointchile.proveedores.exception.ProveedorNoEncontradoException;
 import cl.bookpointchile.proveedores.exception.ResourceNotFoundException;
+import cl.bookpointchile.proveedores.model.DetalleOrden;
 import cl.bookpointchile.proveedores.model.EstadoOrden;
 import cl.bookpointchile.proveedores.model.OrdenCompra;
 import cl.bookpointchile.proveedores.model.Proveedor;
@@ -17,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,9 +34,16 @@ class ProveedoresServiceImplTest {
     private ProveedorRepository proveedorRepository;
     @Mock
     private OrdenCompraRepository ordenCompraRepository;
+    @Mock
+    private InventarioClient inventarioClient;
 
     @InjectMocks
     private ProveedoresServiceImpl proveedoresService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(proveedoresService, "sucursalDestinoId", 1L);
+    }
 
     private Proveedor proveedor(Long id) {
         return Proveedor.builder()
@@ -112,14 +122,22 @@ class ProveedoresServiceImplTest {
 
     @Test
     void registrarRecepcion_transicionaARecibida() {
+        DetalleOrden detalle = DetalleOrden.builder()
+                .id(1L).productoId(5L).cantidadSolicitada(20).costoUnitario(new BigDecimal("3000")).build();
+        List<DetalleOrden> detalles = new ArrayList<>();
+        detalles.add(detalle);
+
         OrdenCompra orden = OrdenCompra.builder()
-                .id(1L).proveedor(proveedor(1L)).estado(EstadoOrden.PENDIENTE).build();
+                .id(1L).proveedor(proveedor(1L)).estado(EstadoOrden.PENDIENTE).detalles(detalles).build();
+        
         when(ordenCompraRepository.findById(1L)).thenReturn(Optional.of(orden));
         when(ordenCompraRepository.save(any(OrdenCompra.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(inventarioClient.registrarAjuste(any(AjusteStockRequestDTO.class))).thenReturn(new InventarioResponseDTO());
 
         OrdenCompraResponseDTO response = proveedoresService.registrarRecepcionMercaderia(1L);
 
         assertEquals(EstadoOrden.RECIBIDA, response.getEstado());
+        verify(inventarioClient, times(1)).registrarAjuste(any(AjusteStockRequestDTO.class));
     }
 
     @Test

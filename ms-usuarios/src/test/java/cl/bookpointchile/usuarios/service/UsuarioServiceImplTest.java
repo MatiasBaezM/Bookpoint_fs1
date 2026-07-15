@@ -146,4 +146,24 @@ class UsuarioServiceImplTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> usuarioService.actualizarRol(1L, request));
     }
+
+    // ---------- obtenerUsuarioPorRut ----------
+
+    @Test
+    void obtenerUsuarioPorRutExistente_retornaUsuario() {
+        when(usuarioRepository.findByRut("19876543-2")).thenReturn(Optional.of(usuario(1L, rol(4L, "Cliente Web"))));
+
+        UsuarioResponseDTO response = usuarioService.obtenerUsuarioPorRut("19876543-2");
+
+        assertEquals("camila@example.com", response.getEmail());
+        assertEquals("19876543-2", response.getRut());
+    }
+
+    @Test
+    void obtenerUsuarioPorRutInexistente_lanzaNoEncontrado() {
+        when(usuarioRepository.findByRut("NO-EXISTE")).thenReturn(Optional.empty());
+
+        assertThrows(UsuarioNoEncontradoException.class,
+                () -> usuarioService.obtenerUsuarioPorRut("NO-EXISTE"));
+    }
 }

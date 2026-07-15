@@ -98,6 +98,26 @@ class UsuarioControllerTest {
     }
 
     @Test
+    void obtenerUsuarioPorRut_retorna200() throws Exception {
+        Mockito.when(usuarioService.obtenerUsuarioPorRut("19876543-2"))
+                .thenReturn(UsuarioResponseDTO.builder().id(1L).rut("19876543-2").email("camila@example.com").build());
+
+        mockMvc.perform(get("/api/usuarios/rut/19876543-2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("camila@example.com"))
+                .andExpect(jsonPath("$.rut").value("19876543-2"));
+    }
+
+    @Test
+    void obtenerUsuarioPorRutInexistente_retorna404() throws Exception {
+        Mockito.when(usuarioService.obtenerUsuarioPorRut("NO-EXISTE"))
+                .thenThrow(new UsuarioNoEncontradoException("No existe"));
+
+        mockMvc.perform(get("/api/usuarios/rut/NO-EXISTE"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void actualizarRol_retorna200() throws Exception {
         ActualizarRolRequestDTO request = ActualizarRolRequestDTO.builder().rolId(1L).build();
         Mockito.when(usuarioService.actualizarRol(eq(1L), any()))

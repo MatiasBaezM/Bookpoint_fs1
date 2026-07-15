@@ -58,6 +58,15 @@ public class Venta {
     @Column(name = "codigo_descuento", length = 50)
     private String codigoDescuento;
 
+    @Column(name = "tipo_documento", nullable = false, length = 20)
+    private String tipoDocumento;
+
+    @Column(name = "razon_social", length = 150)
+    private String razonSocial;
+
+    @Column(length = 150)
+    private String giro;
+
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal;
 

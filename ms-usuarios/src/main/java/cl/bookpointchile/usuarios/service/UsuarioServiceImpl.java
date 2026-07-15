@@ -111,6 +111,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         return mapToResponse(saved);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public UsuarioResponseDTO obtenerUsuarioPorRut(String rut) {
+        log.info("Buscando detalles de usuario con RUT: {}", rut);
+        Usuario usuario = usuarioRepository.findByRut(rut)
+                .orElseThrow(() -> {
+                    log.error("Usuario con RUT {} no encontrado.", rut);
+                    return new UsuarioNoEncontradoException("El usuario con RUT " + rut + " no existe.");
+                });
+        return mapToResponse(usuario);
+    }
+
     // Helper manual de mapeo
     private UsuarioResponseDTO mapToResponse(Usuario u) {
         return UsuarioResponseDTO.builder()

@@ -1,7 +1,11 @@
 package cl.bookpointchile.facturacion.service;
 
+import cl.bookpointchile.facturacion.client.UsuariosClient;
+import cl.bookpointchile.facturacion.client.VentasClient;
 import cl.bookpointchile.facturacion.dto.DocumentoResponseDTO;
 import cl.bookpointchile.facturacion.dto.EmitirDocumentoRequestDTO;
+import cl.bookpointchile.facturacion.dto.UsuarioResponseDTO;
+import cl.bookpointchile.facturacion.dto.VentaResponseDTO;
 import cl.bookpointchile.facturacion.exception.DatosFacturacionIncompletosException;
 import cl.bookpointchile.facturacion.exception.DocumentoDuplicadoException;
 import cl.bookpointchile.facturacion.exception.DocumentoNoEncontradoException;
@@ -22,6 +26,8 @@ import java.util.stream.Collectors;
 public class FacturacionServiceImpl implements FacturacionService {
 
     private final DocumentoTributarioRepository repository;
+    private final VentasClient ventasClient;
+    private final UsuariosClient usuariosClient;
 
     @Override
     @Transactional
@@ -38,7 +44,48 @@ public class FacturacionServiceImpl implements FacturacionService {
             throw new DocumentoDuplicadoException("El folio de venta '" + request.getFolioVenta() + "' ya tiene un documento tributario emitido.");
         }
 
-        // 2. Validar tipo de documento
+        // 2. Validar existencia y consistencia de la venta (pedido)
+        try {
+            VentaResponseDTO venta = ventasClient.obtenerVentaPorFolio(folioUpper);
+            if (venta == null) {
+                throw new DatosFacturacionIncompletosException("La venta con el folio '" + request.getFolioVenta() + "' no existe.");
+            }
+            // Validar que el monto neto coincida con el total de la venta (Neto = total / 1.19)
+            double netoCalculado = Math.round(venta.getTotal() / 1.19);
+            if (Math.abs(netoCalculado - request.getMontoNeto()) > 1.0) { // Tolerancia por redondeo
+                log.error("Validación fallida: Monto neto de la petición ({}) no coincide con el calculado de la venta ({}).",
+                        request.getMontoNeto(), netoCalculado);
+                throw new DatosFacturacionIncompletosException("El monto neto ingresado (" + request.getMontoNeto() + 
+                        ") no coincide con el total de la venta registrada.");
+            }
+        } catch (DatosFacturacionIncompletosException e) {
+            throw e;
+        } catch (feign.FeignException.NotFound e) {
+            log.error("Venta no encontrada en ms-ventas con folio: '{}'", folioUpper);
+            throw new DatosFacturacionIncompletosException("La venta con el folio '" + request.getFolioVenta() + "' no existe en el sistema de ventas.");
+        } catch (Exception e) {
+            log.warn("No fue posible comunicarse con ms-ventas para validar la venta. Continuando en modo degradado: {}", e.getMessage());
+        }
+
+        // 3. Validar existencia del cliente (si no es el RUT genérico)
+        String rutGenerico = "66666666-6";
+        if (!rutGenerico.equals(rutClean)) {
+            try {
+                UsuarioResponseDTO usuario = usuariosClient.obtenerUsuarioPorRut(rutClean);
+                if (usuario == null || !"ACTIVO".equalsIgnoreCase(usuario.getEstado())) {
+                    throw new DatosFacturacionIncompletosException("El cliente con RUT " + request.getRutCliente() + " no está registrado o no se encuentra activo.");
+                }
+            } catch (DatosFacturacionIncompletosException e) {
+                throw e;
+            } catch (feign.FeignException.NotFound e) {
+                log.error("Cliente no encontrado en ms-usuarios con RUT: '{}'", rutClean);
+                throw new DatosFacturacionIncompletosException("El cliente con RUT " + request.getRutCliente() + " no existe en el registro de usuarios.");
+            } catch (Exception e) {
+                log.warn("No fue posible comunicarse con ms-usuarios para validar el cliente. Continuando en modo degradado: {}", e.getMessage());
+            }
+        }
+
+        // 4. Validar tipo de documento
         if (!"BOLETA".equals(tipoUpper) && !"FACTURA".equals(tipoUpper)) {
             log.warn("Validación fallida: Tipo de documento '{}' no es válido.", tipoUpper);
             throw new DatosFacturacionIncompletosException("El tipo de documento debe ser 'BOLETA' o 'FACTURA'.");
@@ -47,7 +94,7 @@ public class FacturacionServiceImpl implements FacturacionService {
         String razonSocial = null;
         String giro = null;
 
-        // 3. Validar requisitos de Factura
+        // 5. Validar requisitos de Factura
         if ("FACTURA".equals(tipoUpper)) {
             if (request.getRazonSocial() == null || request.getRazonSocial().trim().isEmpty() ||
                 request.getGiro() == null || request.getGiro().trim().isEmpty()) {
@@ -58,8 +105,7 @@ public class FacturacionServiceImpl implements FacturacionService {
             giro = request.getGiro().trim().toUpperCase();
         }
 
-        // 4. Cálculo matemático del IVA (19%) y total con precisión
-        // En Chile, las transacciones se redondean a pesos enteros
+        // 6. Cálculo matemático del IVA (19%) y total con precisión
         double neto = request.getMontoNeto();
         double iva = Math.round(neto * 0.19);
         double total = neto + iva;
