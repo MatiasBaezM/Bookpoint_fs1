@@ -178,9 +178,7 @@ public class InventarioServiceImpl implements InventarioService {
     public StockResponseDTO verificarDisponibilidad(Long productoId, Integer cantidad) {
         log.info("Verificando disponibilidad de stock global/centralizado para producto ID: {}, cantidad: {}", productoId, cantidad);
         
-        List<Inventario> stocks = inventarioRepository.findAll().stream()
-                .filter(i -> i.getProductoId().equals(productoId))
-                .collect(Collectors.toList());
+        List<Inventario> stocks = inventarioRepository.findByProductoId(productoId);
 
         int stockActualTotal = stocks.stream()
                 .mapToInt(Inventario::getCantidad)
@@ -214,8 +212,8 @@ public class InventarioServiceImpl implements InventarioService {
 
             // Si todos tienen stock, proceder a descontar de forma global (empezando por la primera sucursal con stock)
             for (cl.bookpointchile.inventario.event.DetalleVentaEvent detalle : event.getDetalles()) {
-                List<Inventario> stocks = inventarioRepository.findAll().stream()
-                        .filter(i -> i.getProductoId().equals(detalle.getProductoId()) && i.getCantidad() > 0)
+                List<Inventario> stocks = inventarioRepository.findByProductoId(detalle.getProductoId()).stream()
+                        .filter(i -> i.getCantidad() > 0)
                         .collect(Collectors.toList());
                 
                 int cantidadPorDescontar = detalle.getCantidad();

@@ -1,6 +1,7 @@
 package cl.bookpointchile.catalogo.service;
 
 import cl.bookpointchile.catalogo.dto.*;
+import cl.bookpointchile.catalogo.exception.ProductoDuplicadoException;
 import cl.bookpointchile.catalogo.exception.ProductoNoEncontradoException;
 import cl.bookpointchile.catalogo.model.Producto;
 import cl.bookpointchile.catalogo.model.Resena;
@@ -85,6 +86,8 @@ class CatalogoServiceImplTest {
         ProductoRegistroRequestDTO request = ProductoRegistroRequestDTO.builder()
                 .titulo("Rayuela").autor("Cortázar").editorial("Alfaguara")
                 .precio(new BigDecimal("9990")).categoria("Novela").build();
+        when(productoRepository.existsByTituloIgnoreCaseAndAutorIgnoreCaseAndEditorialIgnoreCase("Rayuela", "Cortázar", "Alfaguara"))
+                .thenReturn(false);
         when(productoRepository.save(any(Producto.class))).thenAnswer(inv -> {
             Producto p = inv.getArgument(0);
             p.setId(5L);
@@ -95,6 +98,19 @@ class CatalogoServiceImplTest {
 
         assertEquals(5L, response.getId());
         assertEquals("Rayuela", response.getTitulo());
+    }
+
+    @Test
+    void registrarProductoDuplicado_lanzaException() {
+        ProductoRegistroRequestDTO request = ProductoRegistroRequestDTO.builder()
+                .titulo("Rayuela").autor("Cortázar").editorial("Alfaguara")
+                .precio(new BigDecimal("9990")).categoria("Novela").build();
+        when(productoRepository.existsByTituloIgnoreCaseAndAutorIgnoreCaseAndEditorialIgnoreCase("Rayuela", "Cortázar", "Alfaguara"))
+                .thenReturn(true);
+
+        assertThrows(ProductoDuplicadoException.class,
+                () -> catalogoService.registrarProducto(request));
+        verify(productoRepository, never()).save(any());
     }
 
     // ---------- agregarResena ----------

@@ -26,4 +26,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             @Param("precioMin") BigDecimal precioMin,
             @Param("precioMax") BigDecimal precioMax,
             Pageable pageable);
+
+    boolean existsByTituloIgnoreCaseAndAutorIgnoreCaseAndEditorialIgnoreCase(String titulo, String autor, String editorial);
 }

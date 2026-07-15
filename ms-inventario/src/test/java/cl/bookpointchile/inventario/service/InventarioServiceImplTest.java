@@ -262,7 +262,7 @@ class InventarioServiceImplTest {
 
     @Test
     void verificarDisponibilidadConStockSuficiente_retornaDisponible() {
-        when(inventarioRepository.findAll()).thenReturn(List.of(inventario(10L, 50, 5, 1L)));
+        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inventario(10L, 50, 5, 1L)));
 
         StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 10);
 
@@ -272,7 +272,7 @@ class InventarioServiceImplTest {
 
     @Test
     void verificarDisponibilidadConStockInsuficiente_retornaNoDisponible() {
-        when(inventarioRepository.findAll()).thenReturn(List.of(inventario(10L, 2, 5, 1L)));
+        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inventario(10L, 2, 5, 1L)));
 
         StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 10);
 
@@ -304,7 +304,7 @@ class InventarioServiceImplTest {
                 .detalles(List.of(DetalleVentaEvent.builder().productoId(1L).cantidad(3).build()))
                 .build();
 
-        when(inventarioRepository.findAll()).thenReturn(List.of(inv));
+        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inv));
         when(inventarioRepository.save(any(Inventario.class))).thenAnswer(i -> i.getArgument(0));
 
         inventarioService.procesarVentaCreada(event);
@@ -329,7 +329,7 @@ class InventarioServiceImplTest {
                 .detalles(List.of(DetalleVentaEvent.builder().productoId(1L).cantidad(10).build()))
                 .build();
 
-        when(inventarioRepository.findAll()).thenReturn(List.of(inv));
+        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inv));
 
         inventarioService.procesarVentaCreada(event);
 

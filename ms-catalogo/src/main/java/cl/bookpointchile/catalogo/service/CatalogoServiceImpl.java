@@ -1,6 +1,7 @@
 package cl.bookpointchile.catalogo.service;
 
 import cl.bookpointchile.catalogo.dto.*;
+import cl.bookpointchile.catalogo.exception.ProductoDuplicadoException;
 import cl.bookpointchile.catalogo.exception.ProductoNoEncontradoException;
 import cl.bookpointchile.catalogo.model.Producto;
 import cl.bookpointchile.catalogo.model.Resena;
@@ -71,13 +72,24 @@ public class CatalogoServiceImpl implements CatalogoService {
     public ProductoResponseDTO registrarProducto(ProductoRegistroRequestDTO request) {
         log.info("Registrando nuevo producto en el catálogo: '{}' de '{}'", request.getTitulo(), request.getAutor());
 
+        String tituloTrim = request.getTitulo().trim();
+        String autorTrim = request.getAutor().trim();
+        String editorialTrim = request.getEditorial().trim();
+
+        if (productoRepository.existsByTituloIgnoreCaseAndAutorIgnoreCaseAndEditorialIgnoreCase(tituloTrim, autorTrim, editorialTrim)) {
+            log.warn("Registro rechazado: Ya existe un producto con el mismo título '{}', autor '{}' y editorial '{}'", 
+                    tituloTrim, autorTrim, editorialTrim);
+            throw new ProductoDuplicadoException("El producto con título '" + request.getTitulo() + 
+                    "', autor '" + request.getAutor() + "' y editorial '" + request.getEditorial() + "' ya se encuentra registrado.");
+        }
+
         Producto producto = Producto.builder()
-                .titulo(request.getTitulo())
-                .autor(request.getAutor())
-                .editorial(request.getEditorial())
+                .titulo(tituloTrim)
+                .autor(autorTrim)
+                .editorial(editorialTrim)
                 .precio(request.getPrecio())
-                .categoria(request.getCategoria())
-                .descripcion(request.getDescripcion())
+                .categoria(request.getCategoria().trim())
+                .descripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null)
                 .build();
 
         Producto saved = productoRepository.save(producto);
