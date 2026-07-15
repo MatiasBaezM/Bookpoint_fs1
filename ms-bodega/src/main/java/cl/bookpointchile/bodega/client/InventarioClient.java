@@ -14,6 +14,7 @@ public interface InventarioClient {
 
     @GetMapping("/api/inventario/check-stock")
     StockResponseDTO checkStock(
+            @RequestParam("sucursalId") Long sucursalId,
             @RequestParam("productoId") Long productoId,
             @RequestParam("cantidad") Integer cantidad
     );

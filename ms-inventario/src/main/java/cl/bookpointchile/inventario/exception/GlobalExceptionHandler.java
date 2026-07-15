@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -54,6 +55,20 @@ public class GlobalExceptionHandler {
                 .message("Input validation errors occurred.")
                 .path(request.getRequestURI())
                 .details(details)
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // Sin este handler, el catch-all de abajo convertiría una petición mal formada
+    // (ej. /check-stock sin sucursalId) en un 500 en lugar de un 400.
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParams(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .message("Falta el parámetro obligatorio '" + ex.getParameterName() + "'.")
+                .path(request.getRequestURI())
                 .build();
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }

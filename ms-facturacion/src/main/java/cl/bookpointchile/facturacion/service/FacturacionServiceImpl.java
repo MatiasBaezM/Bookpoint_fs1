@@ -2,6 +2,8 @@ package cl.bookpointchile.facturacion.service;
 
 import cl.bookpointchile.facturacion.client.UsuariosClient;
 import cl.bookpointchile.facturacion.client.VentasClient;
+import cl.bookpointchile.facturacion.dto.DetalleDocumentoRequestDTO;
+import cl.bookpointchile.facturacion.dto.DetalleDocumentoResponseDTO;
 import cl.bookpointchile.facturacion.dto.DocumentoResponseDTO;
 import cl.bookpointchile.facturacion.dto.EmitirDocumentoRequestDTO;
 import cl.bookpointchile.facturacion.dto.UsuarioResponseDTO;
@@ -9,6 +11,7 @@ import cl.bookpointchile.facturacion.dto.VentaResponseDTO;
 import cl.bookpointchile.facturacion.exception.DatosFacturacionIncompletosException;
 import cl.bookpointchile.facturacion.exception.DocumentoDuplicadoException;
 import cl.bookpointchile.facturacion.exception.DocumentoNoEncontradoException;
+import cl.bookpointchile.facturacion.model.DetalleDocumento;
 import cl.bookpointchile.facturacion.model.DocumentoTributario;
 import cl.bookpointchile.facturacion.repository.DocumentoTributarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,8 +49,9 @@ public class FacturacionServiceImpl implements FacturacionService {
         }
 
         // 2. Validar existencia y consistencia de la venta (pedido)
+        VentaResponseDTO venta;
         try {
-            VentaResponseDTO venta = ventasClient.obtenerVentaPorFolio(folioUpper);
+            venta = ventasClient.obtenerVentaPorFolio(folioUpper);
             if (venta == null) {
                 throw new DatosFacturacionIncompletosException("La venta con el folio '" + request.getFolioVenta() + "' no existe.");
             }
@@ -55,7 +60,7 @@ public class FacturacionServiceImpl implements FacturacionService {
             if (Math.abs(netoCalculado - request.getMontoNeto()) > 1.0) { // Tolerancia por redondeo
                 log.error("Validación fallida: Monto neto de la petición ({}) no coincide con el calculado de la venta ({}).",
                         request.getMontoNeto(), netoCalculado);
-                throw new DatosFacturacionIncompletosException("El monto neto ingresado (" + request.getMontoNeto() + 
+                throw new DatosFacturacionIncompletosException("El monto neto ingresado (" + request.getMontoNeto() +
                         ") no coincide con el total de la venta registrada.");
             }
         } catch (DatosFacturacionIncompletosException e) {
@@ -66,6 +71,26 @@ public class FacturacionServiceImpl implements FacturacionService {
         } catch (Exception e) {
             log.error("No fue posible comunicarse con ms-ventas para validar la venta: {}", e.getMessage());
             throw new DatosFacturacionIncompletosException("No fue posible validar la existencia del folio de venta '" + request.getFolioVenta() + "' debido a problemas de comunicación.");
+        }
+
+        // 2.1 Resolver la trazabilidad del documento (venta, usuario y sucursal).
+        // ms-ventas es la fuente de verdad; la petición solo actúa como respaldo.
+        Long ventaId = venta.getId() != null ? venta.getId() : request.getVentaId();
+        Long usuarioId = venta.getUsuarioId() != null ? venta.getUsuarioId() : request.getUsuarioId();
+        Long sucursalId = venta.getSucursalId() != null ? venta.getSucursalId() : request.getSucursalId();
+
+        if (sucursalId == null) {
+            log.error("La venta '{}' no tiene sucursal asociada; no es posible emitir el documento.", folioUpper);
+            throw new DatosFacturacionIncompletosException("La venta con el folio '" + request.getFolioVenta() +
+                    "' no tiene una sucursal asociada, por lo que no es posible emitir el documento tributario.");
+        }
+
+        // 2.2 Resolver las líneas del documento a partir de la venta (o de la petición como respaldo)
+        List<DetalleDocumentoRequestDTO> lineas = resolverLineas(request, venta);
+        if (lineas.isEmpty()) {
+            log.error("No fue posible determinar el detalle de productos para el folio '{}'.", folioUpper);
+            throw new DatosFacturacionIncompletosException("No fue posible determinar el detalle de productos de la venta '" +
+                    request.getFolioVenta() + "'; el documento tributario debe incluir al menos un producto.");
         }
 
         // 3. Validar existencia del cliente (si no es el RUT genérico)
@@ -115,6 +140,9 @@ public class FacturacionServiceImpl implements FacturacionService {
 
         DocumentoTributario nuevoDoc = DocumentoTributario.builder()
                 .folioVenta(folioUpper)
+                .ventaId(ventaId)
+                .usuarioId(usuarioId)
+                .sucursalId(sucursalId)
                 .rutCliente(rutClean)
                 .razonSocial(razonSocial)
                 .giro(giro)
@@ -125,11 +153,51 @@ public class FacturacionServiceImpl implements FacturacionService {
                 .fechaEmision(LocalDateTime.now())
                 .build();
 
+        for (DetalleDocumentoRequestDTO linea : lineas) {
+            BigDecimal precio = linea.getPrecioUnitario();
+            BigDecimal subtotal = linea.getSubtotal() != null
+                    ? linea.getSubtotal()
+                    : precio.multiply(BigDecimal.valueOf(linea.getCantidad()));
+
+            nuevoDoc.addDetalle(DetalleDocumento.builder()
+                    .productoId(linea.getProductoId())
+                    .productoNombre(linea.getProductoNombre())
+                    .cantidad(linea.getCantidad())
+                    .precioUnitario(precio)
+                    .subtotal(subtotal)
+                    .build());
+        }
+
         DocumentoTributario guardado = repository.save(nuevoDoc);
-        log.info("{} emitida de forma exitosa. ID: {}, Folio: '{}', Total: ${}", 
-                tipoUpper, guardado.getId(), guardado.getFolioVenta(), guardado.getMontoTotal());
+        log.info("{} emitida de forma exitosa. ID: {}, Folio: '{}', Venta ID: {}, Usuario ID: {}, Sucursal ID: {}, Productos: {}, Total: ${}",
+                tipoUpper, guardado.getId(), guardado.getFolioVenta(), guardado.getVentaId(),
+                guardado.getUsuarioId(), guardado.getSucursalId(), guardado.getDetalles().size(), guardado.getMontoTotal());
 
         return mapToResponse(guardado);
+    }
+
+    // El detalle de la venta en ms-ventas manda; solo si no está disponible se usa el
+    // detalle que venga en la petición.
+    private List<DetalleDocumentoRequestDTO> resolverLineas(EmitirDocumentoRequestDTO request, VentaResponseDTO venta) {
+        if (venta.getDetalles() != null && !venta.getDetalles().isEmpty()) {
+            return venta.getDetalles().stream()
+                    .map(d -> DetalleDocumentoRequestDTO.builder()
+                            .productoId(d.getProductoId())
+                            .productoNombre(d.getProductoNombre())
+                            .cantidad(d.getCantidad())
+                            .precioUnitario(d.getPrecioUnitario())
+                            .subtotal(d.getSubtotal())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        if (request.getDetalles() != null && !request.getDetalles().isEmpty()) {
+            log.warn("La venta '{}' no expuso detalle de productos; se usará el detalle recibido en la petición.",
+                    request.getFolioVenta());
+            return request.getDetalles();
+        }
+
+        return List.of();
     }
 
     @Override
@@ -157,9 +225,23 @@ public class FacturacionServiceImpl implements FacturacionService {
     }
 
     private DocumentoResponseDTO mapToResponse(DocumentoTributario d) {
+        List<DetalleDocumentoResponseDTO> detalles = d.getDetalles().stream()
+                .map(det -> DetalleDocumentoResponseDTO.builder()
+                        .id(det.getId())
+                        .productoId(det.getProductoId())
+                        .productoNombre(det.getProductoNombre())
+                        .cantidad(det.getCantidad())
+                        .precioUnitario(det.getPrecioUnitario())
+                        .subtotal(det.getSubtotal())
+                        .build())
+                .collect(Collectors.toList());
+
         return DocumentoResponseDTO.builder()
                 .id(d.getId())
                 .folioVenta(d.getFolioVenta())
+                .ventaId(d.getVentaId())
+                .usuarioId(d.getUsuarioId())
+                .sucursalId(d.getSucursalId())
                 .rutCliente(d.getRutCliente())
                 .razonSocial(d.getRazonSocial())
                 .giro(d.getGiro())
@@ -168,6 +250,7 @@ public class FacturacionServiceImpl implements FacturacionService {
                 .montoIva(d.getMontoIva())
                 .montoTotal(d.getMontoTotal())
                 .fechaEmision(d.getFechaEmision())
+                .detalles(detalles)
                 .build();
     }
 }

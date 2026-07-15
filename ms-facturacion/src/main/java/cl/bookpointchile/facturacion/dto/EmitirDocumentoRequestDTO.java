@@ -1,5 +1,6 @@
 package cl.bookpointchile.facturacion.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -7,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -16,6 +19,12 @@ public class EmitirDocumentoRequestDTO {
 
     @NotBlank(message = "El folio de venta es obligatorio")
     private String folioVenta;
+
+    private Long ventaId; // Si no viene, se resuelve consultando ms-ventas por folio
+
+    private Long usuarioId; // Si no viene, se resuelve consultando ms-ventas por folio
+
+    private Long sucursalId; // Si no viene, se resuelve consultando ms-ventas por folio
 
     @NotBlank(message = "El RUT del cliente es obligatorio")
     private String rutCliente;
@@ -30,4 +39,9 @@ public class EmitirDocumentoRequestDTO {
     @NotNull(message = "El monto neto es obligatorio")
     @Positive(message = "El monto neto debe ser un valor positivo")
     private Double montoNeto;
+
+    // Líneas del documento, cada una identificando el producto por su código (productoId).
+    // Si no vienen, se resuelven consultando el detalle de la venta en ms-ventas.
+    @Valid
+    private List<DetalleDocumentoRequestDTO> detalles;
 }

@@ -1,12 +1,7 @@
 package cl.bookpointchile.inventario.service;
 
 import cl.bookpointchile.inventario.client.SucursalesClient;
-import cl.bookpointchile.inventario.config.RabbitMQConfig;
 import cl.bookpointchile.inventario.dto.*;
-import cl.bookpointchile.inventario.event.DetalleVentaEvent;
-import cl.bookpointchile.inventario.event.StockRechazadoEvent;
-import cl.bookpointchile.inventario.event.StockReservadoEvent;
-import cl.bookpointchile.inventario.event.VentaCreadaEvent;
 import cl.bookpointchile.inventario.exception.ResourceNotFoundException;
 import cl.bookpointchile.inventario.exception.StockInsuficienteException;
 import cl.bookpointchile.inventario.exception.SucursalNoEncontradaException;
@@ -15,11 +10,9 @@ import cl.bookpointchile.inventario.repository.InventarioRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +25,6 @@ import static org.mockito.Mockito.*;
 class InventarioServiceImplTest {
 
     @Mock private InventarioRepository inventarioRepository;
-    @Mock private RabbitTemplate rabbitTemplate;
     @Mock private SucursalesClient sucursalesClient;
 
     @InjectMocks
@@ -262,22 +254,37 @@ class InventarioServiceImplTest {
 
     @Test
     void verificarDisponibilidadConStockSuficiente_retornaDisponible() {
-        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inventario(10L, 50, 5, 1L)));
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L))
+                .thenReturn(Optional.of(inventario(10L, 50, 5, 1L)));
 
-        StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 10);
+        StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 1L, 10);
 
         assertTrue(response.isDisponible());
         assertEquals(50, response.getStockActual());
+        assertEquals(1L, response.getSucursalId());
     }
 
     @Test
     void verificarDisponibilidadConStockInsuficiente_retornaNoDisponible() {
-        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inventario(10L, 2, 5, 1L)));
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L))
+                .thenReturn(Optional.of(inventario(10L, 2, 5, 1L)));
 
-        StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 10);
+        StockResponseDTO response = inventarioService.verificarDisponibilidad(1L, 1L, 10);
 
         assertFalse(response.isDisponible());
         assertEquals(2, response.getStockActual());
+    }
+
+    @Test
+    void verificarDisponibilidadSoloMiraLaSucursalPedida_noSumaOtrasSucursales() {
+        // La sucursal 2 no tiene registro del producto, aunque la sucursal 1 tenga 50 unidades
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 2L)).thenReturn(Optional.empty());
+
+        StockResponseDTO response = inventarioService.verificarDisponibilidad(2L, 1L, 1);
+
+        assertFalse(response.isDisponible());
+        assertEquals(0, response.getStockActual());
+        verify(inventarioRepository, never()).findByProductoId(anyLong());
     }
 
     // ── obtenerAlertasReposicion ──────────────────────────────────────────────
@@ -293,54 +300,104 @@ class InventarioServiceImplTest {
         assertTrue(response.get(0).isAlertaReposicion());
     }
 
-    // ── procesarVentaCreada ───────────────────────────────────────────────────
+    // ── descontarStockVenta ───────────────────────────────────────────────────
 
-    @Test
-    void procesarVentaCreada_stockSuficiente_descontaYPublicaReservado() {
-        Inventario inv = inventario(10L, 20, 5, 1L);
-
-        VentaCreadaEvent event = VentaCreadaEvent.builder()
-                .ventaId(1L).folio("BP-ONL-0001")
-                .detalles(List.of(DetalleVentaEvent.builder().productoId(1L).cantidad(3).build()))
+    private DescontarStockRequestDTO ventaCreada(Long sucursalId, Long productoId, int cantidad) {
+        return DescontarStockRequestDTO.builder()
+                .ventaId(1L).folio("BP-ONL-0001").sucursalId(sucursalId).usuarioId(7L)
+                .detalles(List.of(DetalleStockRequestDTO.builder().productoId(productoId).cantidad(cantidad).build()))
                 .build();
-
-        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inv));
-        when(inventarioRepository.save(any(Inventario.class))).thenAnswer(i -> i.getArgument(0));
-
-        inventarioService.procesarVentaCreada(event);
-
-        assertEquals(17, inv.getCantidad()); // 20 - 3
-        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-        verify(rabbitTemplate).convertAndSend(
-                eq(RabbitMQConfig.EXCHANGE_VENTAS),
-                eq(RabbitMQConfig.ROUTING_KEY_STOCK_RESERVADO),
-                captor.capture());
-        StockReservadoEvent reservado = (StockReservadoEvent) captor.getValue();
-        assertEquals("BP-ONL-0001", reservado.getFolio());
-        assertEquals(1L, reservado.getVentaId());
     }
 
     @Test
-    void procesarVentaCreada_stockInsuficiente_publicaRechazado() {
+    void descontarStockVenta_stockSuficiente_descuentaDeLaSucursalDeLaVenta() {
+        Inventario inv = inventario(10L, 20, 5, 1L);
+        when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.of(inv));
+        when(inventarioRepository.save(any(Inventario.class))).thenAnswer(i -> i.getArgument(0));
+
+        inventarioService.descontarStockVenta(ventaCreada(1L, 1L, 3));
+
+        assertEquals(17, inv.getCantidad()); // 20 - 3
+    }
+
+    @Test
+    void descontarStockVenta_noTocaElStockDeOtrasSucursales() {
+        // La compra es en la sucursal 2; el stock de la sucursal 1 debe quedar intacto
+        Inventario invSucursal1 = inventario(10L, 100, 5, 1L);
+        Inventario invSucursal2 = inventario(11L, 8, 5, 2L);
+
+        when(sucursalesClient.obtenerPorId(2L)).thenReturn(sucursalActiva(2L));
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 2L)).thenReturn(Optional.of(invSucursal2));
+        when(inventarioRepository.save(any(Inventario.class))).thenAnswer(i -> i.getArgument(0));
+
+        inventarioService.descontarStockVenta(ventaCreada(2L, 1L, 5));
+
+        assertEquals(3, invSucursal2.getCantidad());   // 8 - 5
+        assertEquals(100, invSucursal1.getCantidad()); // intacto
+        verify(inventarioRepository, never()).findByProductoId(anyLong());
+    }
+
+    @Test
+    void descontarStockVenta_stockInsuficienteEnLaSucursal_lanzaYNoDescuenta() {
         Inventario inv = inventario(10L, 2, 5, 1L);
+        when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.of(inv));
 
-        VentaCreadaEvent event = VentaCreadaEvent.builder()
-                .ventaId(2L).folio("BP-ONL-0002")
-                .detalles(List.of(DetalleVentaEvent.builder().productoId(1L).cantidad(10).build()))
-                .build();
+        assertThrows(StockInsuficienteException.class,
+                () -> inventarioService.descontarStockVenta(ventaCreada(1L, 1L, 10)));
 
-        when(inventarioRepository.findByProductoId(1L)).thenReturn(List.of(inv));
+        assertEquals(2, inv.getCantidad());
+        verify(inventarioRepository, never()).save(any());
+    }
 
-        inventarioService.procesarVentaCreada(event);
+    @Test
+    void descontarStockVenta_stockAgotadoEnLaSucursalAunqueHayaEnOtra_lanza() {
+        // Producto sin registro en la sucursal 2, aunque exista stock en la sucursal 1:
+        // no debe "rescatarse" desde otra sucursal.
+        when(sucursalesClient.obtenerPorId(2L)).thenReturn(sucursalActiva(2L));
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 2L)).thenReturn(Optional.empty());
+
+        assertThrows(StockInsuficienteException.class,
+                () -> inventarioService.descontarStockVenta(ventaCreada(2L, 1L, 1)));
 
         verify(inventarioRepository, never()).save(any());
-        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-        verify(rabbitTemplate).convertAndSend(
-                eq(RabbitMQConfig.EXCHANGE_VENTAS),
-                eq(RabbitMQConfig.ROUTING_KEY_STOCK_RECHAZADO),
-                captor.capture());
-        StockRechazadoEvent rechazado = (StockRechazadoEvent) captor.getValue();
-        assertEquals("BP-ONL-0002", rechazado.getFolio());
-        assertEquals(2L, rechazado.getVentaId());
+    }
+
+    @Test
+    void descontarStockVenta_unaLineaSinStock_noDescuentaNinguna() {
+        // La línea del producto 1 alcanza, la del producto 2 no: no se debe descontar nada.
+        Inventario inv1 = inventario(10L, 20, 5, 1L);
+        Inventario inv2 = Inventario.builder()
+                .id(11L).productoId(2L).productoNombre("Otro").sku("SKU-2-1")
+                .cantidad(1).stockMinimo(5).sucursalId(1L).build();
+
+        DescontarStockRequestDTO event = DescontarStockRequestDTO.builder()
+                .ventaId(1L).folio("BP-ONL-0009").sucursalId(1L)
+                .detalles(List.of(
+                        DetalleStockRequestDTO.builder().productoId(1L).cantidad(3).build(),
+                        DetalleStockRequestDTO.builder().productoId(2L).cantidad(10).build()))
+                .build();
+
+        when(sucursalesClient.obtenerPorId(1L)).thenReturn(sucursalActiva(1L));
+        when(inventarioRepository.findByProductoIdAndSucursalId(1L, 1L)).thenReturn(Optional.of(inv1));
+        when(inventarioRepository.findByProductoIdAndSucursalId(2L, 1L)).thenReturn(Optional.of(inv2));
+
+        assertThrows(StockInsuficienteException.class,
+                () -> inventarioService.descontarStockVenta(event));
+
+        assertEquals(20, inv1.getCantidad());
+        assertEquals(1, inv2.getCantidad());
+        verify(inventarioRepository, never()).save(any());
+    }
+
+    @Test
+    void descontarStockVenta_sinSucursalEnElEvento_lanzaSucursalNoEncontrada() {
+        DescontarStockRequestDTO event = ventaCreada(null, 1L, 1);
+
+        assertThrows(SucursalNoEncontradaException.class,
+                () -> inventarioService.descontarStockVenta(event));
+
+        verify(inventarioRepository, never()).save(any());
     }
 }

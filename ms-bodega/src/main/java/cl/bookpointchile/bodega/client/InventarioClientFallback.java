@@ -11,11 +11,13 @@ import org.springframework.stereotype.Component;
 public class InventarioClientFallback implements InventarioClient {
 
     @Override
-    public StockResponseDTO checkStock(Long productoId, Integer cantidad) {
-        log.warn("ms-inventario no disponible. Aplicando fallback de verificación de stock para producto ID {}.", productoId);
+    public StockResponseDTO checkStock(Long sucursalId, Long productoId, Integer cantidad) {
+        log.warn("ms-inventario no disponible. Aplicando fallback de verificación de stock para producto ID {} en sucursal ID {}.",
+                productoId, sucursalId);
         // Simulación por defecto: Stock disponible (no bloquear la operación de bodega ante una caída transitoria)
         return StockResponseDTO.builder()
                 .productoId(productoId)
+                .sucursalId(sucursalId)
                 .disponible(true)
                 .stockActual(cantidad)
                 .build();

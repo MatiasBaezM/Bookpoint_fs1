@@ -10,12 +10,8 @@ import cl.bookpointchile.ventas.exception.InvalidSaleException;
 import cl.bookpointchile.ventas.exception.ResourceNotFoundException;
 import cl.bookpointchile.ventas.model.*;
 import cl.bookpointchile.ventas.repository.VentaRepository;
-import cl.bookpointchile.ventas.event.VentaCreadaEvent;
-import cl.bookpointchile.ventas.event.DetalleVentaEvent;
-import cl.bookpointchile.ventas.config.RabbitMQConfig;
 import cl.bookpointchile.ventas.event.VentaRegistradaInternaEvent;
 import feign.FeignException;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -37,7 +33,6 @@ public class VentaServiceImpl implements VentaService {
     private static final String RUT_CLIENTE_GENERICO = "66666666-6";
 
     private final VentaRepository ventaRepository;
-    private final RabbitTemplate rabbitTemplate;
     private final InventarioClient inventarioClient;
     private final PromocionClient promocionClient;
     private final FacturacionClient facturacionClient;
@@ -81,15 +76,16 @@ public class VentaServiceImpl implements VentaService {
             }
         }
 
-        // 3. Verificación de Stock en Tiempo Real (Síncrono vía Feign con ms-inventario)
+        // 3. Verificación de Stock en Tiempo Real en la sucursal de la venta (Síncrono vía Feign con ms-inventario)
         for (DetalleVentaRequestDTO item : request.getDetalles()) {
-            StockResponseDTO stock = inventarioClient.checkStock(item.getProductoId(), item.getCantidad());
+            StockResponseDTO stock = inventarioClient.checkStock(
+                    request.getSucursalId(), item.getProductoId(), item.getCantidad());
             if (!stock.isDisponible()) {
-                log.warn("Stock insuficiente para el producto ID {}. Disponible: {}, Solicitado: {}",
-                        item.getProductoId(), stock.getStockActual(), item.getCantidad());
+                log.warn("Stock insuficiente en la sucursal ID {} para el producto ID {}. Disponible: {}, Solicitado: {}",
+                        request.getSucursalId(), item.getProductoId(), stock.getStockActual(), item.getCantidad());
                 throw new InsufficientStockException("Stock insuficiente para el producto '" + item.getProductoNombre() +
-                        "' (ID " + item.getProductoId() + "). Disponible: " + stock.getStockActual() +
-                        ", Solicitado: " + item.getCantidad());
+                        "' (ID " + item.getProductoId() + ") en la sucursal ID " + request.getSucursalId() +
+                        ". Disponible: " + stock.getStockActual() + ", Solicitado: " + item.getCantidad());
             }
         }
 
@@ -152,6 +148,7 @@ public class VentaServiceImpl implements VentaService {
                 .folio(folioUnico)
                 .fecha(LocalDateTime.now())
                 .tipoVenta(request.getTipoVenta())
+                .sucursalId(request.getSucursalId())
                 .usuarioId(request.getUsuarioId())
                 .clienteNombre(clienteNombreResuelto)
                 .clienteRut(clienteRutResuelto)
@@ -186,14 +183,28 @@ public class VentaServiceImpl implements VentaService {
 
         // 7. Publicar evento interno para emisión del documento tributario tras confirmar la venta (Fuera de la transacción principal)
         try {
+            List<DetalleDocumentoRequestDTO> detallesDocumento = ventaGuardada.getDetalles().stream()
+                    .map(d -> DetalleDocumentoRequestDTO.builder()
+                            .productoId(d.getProductoId())
+                            .productoNombre(d.getProductoNombre())
+                            .cantidad(d.getCantidad())
+                            .precioUnitario(d.getPrecioUnitario())
+                            .subtotal(d.getSubtotal())
+                            .build())
+                    .collect(Collectors.toList());
+
             EmitirDocumentoRequestDTO facturaRequest = EmitirDocumentoRequestDTO.builder()
                     .folioVenta(ventaGuardada.getFolio())
+                    .ventaId(ventaGuardada.getId())
+                    .usuarioId(ventaGuardada.getUsuarioId())
+                    .sucursalId(ventaGuardada.getSucursalId())
                     .rutCliente(ventaGuardada.getClienteRut() != null && !ventaGuardada.getClienteRut().trim().isEmpty()
                             ? ventaGuardada.getClienteRut() : RUT_CLIENTE_GENERICO)
                     .tipoDocumento(ventaGuardada.getTipoDocumento())
                     .montoNeto((double) Math.round(ventaGuardada.getTotal().doubleValue() / 1.19)) // Neto real de la venta
                     .razonSocial(ventaGuardada.getRazonSocial())
                     .giro(ventaGuardada.getGiro())
+                    .detalles(detallesDocumento)
                     .build();
             eventPublisher.publishEvent(new VentaRegistradaInternaEvent(this, facturaRequest));
             log.info("Evento VentaRegistradaInternaEvent publicado para folio: {}", ventaGuardada.getFolio());
@@ -201,22 +212,36 @@ public class VentaServiceImpl implements VentaService {
             log.warn("No fue posible preparar el evento de documento tributario para la venta {}: {}", ventaGuardada.getFolio(), e.getMessage());
         }
 
-        // 8. Emitir Evento VentaCreada para MS-Inventario
-        List<DetalleVentaEvent> detallesEvent = ventaGuardada.getDetalles().stream()
-                .map(d -> DetalleVentaEvent.builder()
+        // 8. Descontar el stock en ms-inventario de forma síncrona (Feign) y fijar el estado final
+        List<DetalleStockRequestDTO> detallesDescuento = ventaGuardada.getDetalles().stream()
+                .map(d -> DetalleStockRequestDTO.builder()
                         .productoId(d.getProductoId())
                         .cantidad(d.getCantidad())
                         .build())
                 .collect(Collectors.toList());
 
-        VentaCreadaEvent evento = VentaCreadaEvent.builder()
+        DescontarStockRequestDTO descuentoRequest = DescontarStockRequestDTO.builder()
                 .ventaId(ventaGuardada.getId())
                 .folio(ventaGuardada.getFolio())
-                .detalles(detallesEvent)
+                .sucursalId(ventaGuardada.getSucursalId())
+                .usuarioId(ventaGuardada.getUsuarioId())
+                .detalles(detallesDescuento)
                 .build();
 
-        log.info("Enviando evento VentaCreada a RabbitMQ para folio: {}", ventaGuardada.getFolio());
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_VENTAS, RabbitMQConfig.ROUTING_KEY_VENTA_CREADA, evento);
+        try {
+            inventarioClient.descontarStock(descuentoRequest);
+            ventaGuardada.setEstado(EstadoVenta.COMPLETADA);
+            log.info("Stock descontado con éxito en ms-inventario. Venta ID: {} marcada como COMPLETADA.",
+                    ventaGuardada.getId());
+        } catch (Exception e) {
+            // Cubre tanto el rechazo real de ms-inventario (stock agotado, FeignException) como la
+            // caída de comunicación (fallback): en ambos casos la venta queda registrada, pero
+            // marcada como RECHAZADA en lugar de fallar la petición completa.
+            ventaGuardada.setEstado(EstadoVenta.RECHAZADA);
+            log.warn("No fue posible descontar el stock en ms-inventario para la venta {}: {}. Venta marcada como RECHAZADA.",
+                    ventaGuardada.getFolio(), e.getMessage());
+        }
+        ventaGuardada = ventaRepository.save(ventaGuardada);
 
         return mapToResponse(ventaGuardada);
     }
@@ -282,6 +307,7 @@ public class VentaServiceImpl implements VentaService {
                 .fecha(venta.getFecha())
                 .tipoVenta(venta.getTipoVenta())
                 .estado(venta.getEstado())
+                .sucursalId(venta.getSucursalId())
                 .usuarioId(venta.getUsuarioId())
                 .clienteNombre(venta.getClienteNombre())
                 .clienteRut(venta.getClienteRut())

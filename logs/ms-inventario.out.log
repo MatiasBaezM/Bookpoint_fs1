@@ -1,0 +1,97 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:03:48.613-04:00  INFO 18824 --- [ms-inventario] [           main] c.b.inventario.InventarioApplication     : Starting InventarioApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 18824 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-inventario\target\inventario-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-inventario)
+2026-07-15T11:03:48.627-04:00  INFO 18824 --- [ms-inventario] [           main] c.b.inventario.InventarioApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:03:51.694-04:00  INFO 18824 --- [ms-inventario] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:03:51.826-04:00  INFO 18824 --- [ms-inventario] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 108 ms. Found 1 JPA repository interface.
+2026-07-15T11:03:52.409-04:00  INFO 18824 --- [ms-inventario] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=748f716c-a728-3014-ad25-f9f2ac6cd70e
+2026-07-15T11:03:53.859-04:00  INFO 18824 --- [ms-inventario] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8082 (http)
+2026-07-15T11:03:53.893-04:00  INFO 18824 --- [ms-inventario] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:03:53.894-04:00  INFO 18824 --- [ms-inventario] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:03:53.979-04:00  INFO 18824 --- [ms-inventario] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 5169 ms
+2026-07-15T11:03:54.778-04:00  INFO 18824 --- [ms-inventario] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:03:54.968-04:00  INFO 18824 --- [ms-inventario] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:03:56.350-04:00  INFO 18824 --- [ms-inventario] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:03:56.438-04:00  INFO 18824 --- [ms-inventario] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:03:56.852-04:00  INFO 18824 --- [ms-inventario] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1b732dd
+2026-07-15T11:03:56.856-04:00  INFO 18824 --- [ms-inventario] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:03:56.967-04:00  WARN 18824 --- [ms-inventario] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:03:56.975-04:00  WARN 18824 --- [ms-inventario] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-15T11:03:57.034-04:00  INFO 18824 --- [ms-inventario] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_inventario?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_inventario/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:03:58.982-04:00  INFO 18824 --- [ms-inventario] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-15T11:03:59.218-04:00  INFO 18824 --- [ms-inventario] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:03:59.393-04:00  INFO 18824 --- [ms-inventario] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:04:01.059-04:00  WARN 18824 --- [ms-inventario] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:04:03.015-04:00  INFO 18824 --- [ms-inventario] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:04:03.196-04:00  INFO 18824 --- [ms-inventario] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8082 (http) with context path '/'
+2026-07-15T11:04:03.225-04:00  INFO 18824 --- [ms-inventario] [           main] c.b.inventario.InventarioApplication     : Started InventarioApplication in 15.965 seconds (process running for 17.773)
+2026-07-15T11:04:03.643-04:00  INFO 18824 --- [ms-inventario] [           main] c.b.inventario.config.DataInitializer    : Base de datos ya inicializada. Omitiendo la carga de datos de prueba.
+2026-07-15T11:04:03.646-04:00  WARN 18824 --- [ms-inventario] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:04:03.646-04:00  WARN 18824 --- [ms-inventario] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:16.054-04:00  WARN 18824 --- [ms-inventario] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m19s84ms406µs700ns).
+2026-07-15T11:29:05.610-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-3] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-15T11:29:05.612-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-3] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-15T11:29:05.617-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-3] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms
+2026-07-15T11:29:06.168-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-3] c.b.i.service.InventarioServiceImpl      : Iniciando ajuste físico. Sucursal ID: 4, Producto ID: 6, Cantidad Ajuste: 50, Motivo: 'test'
+2026-07-15T11:29:06.564-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-3] c.b.i.service.InventarioServiceImpl      : Producto ID 6 no registrado en la sucursal 'Test A'. Creando nuevo registro de inventario.
+2026-07-15T11:29:06.691-04:00  WARN 18824 --- [ms-inventario] [nio-8082-exec-3] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 1452, SQLState: 23000
+2026-07-15T11:29:06.692-04:00  WARN 18824 --- [ms-inventario] [nio-8082-exec-3] org.hibernate.orm.jdbc.error             : Cannot add or update a child row: a foreign key constraint fails (`bookpoint_inventario`.`inventario`, CONSTRAINT `FKg0fep9ov3wsu7rqtu9or6vh1k` FOREIGN KEY (`sucursal_id`) REFERENCES `sucursales` (`id`))
+2026-07-15T11:29:07.018-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-5] c.b.i.service.InventarioServiceImpl      : Iniciando ajuste físico. Sucursal ID: 5, Producto ID: 6, Cantidad Ajuste: 3, Motivo: 'test'
+2026-07-15T11:29:07.037-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-5] c.b.i.service.InventarioServiceImpl      : Producto ID 6 no registrado en la sucursal 'Test B'. Creando nuevo registro de inventario.
+2026-07-15T11:29:07.041-04:00  WARN 18824 --- [ms-inventario] [nio-8082-exec-5] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 1452, SQLState: 23000
+2026-07-15T11:29:07.042-04:00  WARN 18824 --- [ms-inventario] [nio-8082-exec-5] org.hibernate.orm.jdbc.error             : Cannot add or update a child row: a foreign key constraint fails (`bookpoint_inventario`.`inventario`, CONSTRAINT `FKg0fep9ov3wsu7rqtu9or6vh1k` FOREIGN KEY (`sucursal_id`) REFERENCES `sucursales` (`id`))
+2026-07-15T11:29:07.126-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-6] c.b.i.service.InventarioServiceImpl      : Verificando disponibilidad de stock en Sucursal ID: 4 para producto ID: 6, cantidad: 10
+2026-07-15T11:29:07.130-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-6] c.b.i.service.InventarioServiceImpl      : Resultado stock para producto ID 6 en sucursal ID 4: Disponible = 0, Cantidad Solicitada = 10, ¿Alcanza? = false
+2026-07-15T11:29:07.212-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-8] c.b.i.service.InventarioServiceImpl      : Verificando disponibilidad de stock en Sucursal ID: 5 para producto ID: 6, cantidad: 10
+2026-07-15T11:29:07.216-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-8] c.b.i.service.InventarioServiceImpl      : Resultado stock para producto ID 6 en sucursal ID 5: Disponible = 0, Cantidad Solicitada = 10, ¿Alcanza? = false
+2026-07-15T11:31:15.791-04:00  INFO 18824 --- [ms-inventario] [io-8082-exec-10] c.b.i.service.InventarioServiceImpl      : Iniciando ajuste físico. Sucursal ID: 4, Producto ID: 6, Cantidad Ajuste: 50, Motivo: 'test'
+2026-07-15T11:31:15.816-04:00  INFO 18824 --- [ms-inventario] [io-8082-exec-10] c.b.i.service.InventarioServiceImpl      : Producto ID 6 no registrado en la sucursal 'Test A'. Creando nuevo registro de inventario.
+2026-07-15T11:31:15.852-04:00  INFO 18824 --- [ms-inventario] [io-8082-exec-10] c.b.i.service.InventarioServiceImpl      : Ajuste físico de inventario completado con éxito. Producto: Producto Genérico ID 6, Cantidad Resultante: 50
+2026-07-15T11:31:15.980-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-2] c.b.i.service.InventarioServiceImpl      : Iniciando ajuste físico. Sucursal ID: 5, Producto ID: 6, Cantidad Ajuste: 3, Motivo: 'test'
+2026-07-15T11:31:16.001-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-2] c.b.i.service.InventarioServiceImpl      : Producto ID 6 no registrado en la sucursal 'Test B'. Creando nuevo registro de inventario.
+2026-07-15T11:31:16.007-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-2] c.b.i.service.InventarioServiceImpl      : Ajuste físico de inventario completado con éxito. Producto: Producto Genérico ID 6, Cantidad Resultante: 3
+2026-07-15T11:31:16.112-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-3] c.b.i.service.InventarioServiceImpl      : Verificando disponibilidad de stock en Sucursal ID: 4 para producto ID: 6, cantidad: 10
+2026-07-15T11:31:16.121-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-3] c.b.i.service.InventarioServiceImpl      : Resultado stock para producto ID 6 en sucursal ID 4: Disponible = 50, Cantidad Solicitada = 10, ¿Alcanza? = true
+2026-07-15T11:31:16.199-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-6] c.b.i.service.InventarioServiceImpl      : Verificando disponibilidad de stock en Sucursal ID: 5 para producto ID: 6, cantidad: 10
+2026-07-15T11:31:16.203-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-6] c.b.i.service.InventarioServiceImpl      : Resultado stock para producto ID 6 en sucursal ID 5: Disponible = 3, Cantidad Solicitada = 10, ¿Alcanza? = false
+2026-07-15T11:31:33.371-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-8] c.b.i.service.InventarioServiceImpl      : Verificando disponibilidad de stock en Sucursal ID: 5 para producto ID: 6, cantidad: 10
+2026-07-15T11:31:33.375-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-8] c.b.i.service.InventarioServiceImpl      : Resultado stock para producto ID 6 en sucursal ID 5: Disponible = 3, Cantidad Solicitada = 10, ¿Alcanza? = false
+2026-07-15T11:31:43.200-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-9] c.b.i.service.InventarioServiceImpl      : Verificando disponibilidad de stock en Sucursal ID: 4 para producto ID: 6, cantidad: 10
+2026-07-15T11:31:43.206-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-9] c.b.i.service.InventarioServiceImpl      : Resultado stock para producto ID 6 en sucursal ID 4: Disponible = 50, Cantidad Solicitada = 10, ¿Alcanza? = true
+2026-07-15T11:31:43.565-04:00  INFO 18824 --- [ms-inventario] [io-8082-exec-10] c.b.i.service.InventarioServiceImpl      : Descontando stock de la Sucursal ID: 4 para Venta ID: 1, Folio: BP-PRE-2F69F7EB
+2026-07-15T11:31:43.590-04:00  INFO 18824 --- [ms-inventario] [io-8082-exec-10] c.b.i.service.InventarioServiceImpl      : Stock descontado. Producto ID: 6, Sucursal: 'Test A', Descontado: 10, Stock resultante: 40
+2026-07-15T11:31:43.591-04:00  INFO 18824 --- [ms-inventario] [io-8082-exec-10] c.b.i.service.InventarioServiceImpl      : Descuento de stock completado para Venta ID: 1 en la sucursal 'Test A'.
+2026-07-15T11:32:04.960-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-1] c.b.i.service.InventarioServiceImpl      : Buscando stock para Sucursal ID: 4 y Producto ID: 6
+2026-07-15T11:32:05.103-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-4] c.b.i.service.InventarioServiceImpl      : Buscando stock para Sucursal ID: 5 y Producto ID: 6
+2026-07-15T11:32:34.547-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-5] c.b.i.service.InventarioServiceImpl      : Verificando disponibilidad de stock en Sucursal ID: 4 para producto ID: 6, cantidad: 1
+2026-07-15T11:32:34.551-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-5] c.b.i.service.InventarioServiceImpl      : Resultado stock para producto ID 6 en sucursal ID 4: Disponible = 40, Cantidad Solicitada = 1, ¿Alcanza? = true
+2026-07-15T11:32:34.581-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-6] c.b.i.service.InventarioServiceImpl      : Descontando stock de la Sucursal ID: 4 para Venta ID: 2, Folio: BP-PRE-905B8F74
+2026-07-15T11:32:34.605-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-6] c.b.i.service.InventarioServiceImpl      : Stock descontado. Producto ID: 6, Sucursal: 'Test A', Descontado: 1, Stock resultante: 39
+2026-07-15T11:32:34.609-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-6] c.b.i.service.InventarioServiceImpl      : Descuento de stock completado para Venta ID: 2 en la sucursal 'Test A'.
+2026-07-15T11:33:02.744-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-7] c.b.i.service.InventarioServiceImpl      : Descontando stock de la Sucursal ID: 5 para Venta ID: 1, Folio: MANUAL-TEST
+2026-07-15T11:33:02.770-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-7] c.b.i.service.InventarioServiceImpl      : Stock descontado. Producto ID: 6, Sucursal: 'Test B', Descontado: 1, Stock resultante: 2
+2026-07-15T11:33:02.771-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-7] c.b.i.service.InventarioServiceImpl      : Descuento de stock completado para Venta ID: 1 en la sucursal 'Test B'.
+2026-07-15T11:33:02.879-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-9] c.b.i.service.InventarioServiceImpl      : Descontando stock de la Sucursal ID: 5 para Venta ID: 1, Folio: MANUAL-TEST2
+2026-07-15T11:33:02.907-04:00  WARN 18824 --- [ms-inventario] [nio-8082-exec-9] c.b.i.service.InventarioServiceImpl      : Stock insuficiente en sucursal 'Test B' para Producto ID: 6. Solicitado: 9999, Disponible: 2
+2026-07-15T11:33:51.678-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-1] c.b.i.service.InventarioServiceImpl      : Buscando stock para Sucursal ID: 4 y Producto ID: 6
+2026-07-15T11:33:52.396-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-2] c.b.i.service.InventarioServiceImpl      : Iniciando ajuste físico. Sucursal ID: 4, Producto ID: 6, Cantidad Ajuste: -1, Motivo: 'Picking completado - venta 2'
+2026-07-15T11:33:52.411-04:00  INFO 18824 --- [ms-inventario] [nio-8082-exec-2] c.b.i.service.InventarioServiceImpl      : Ajuste físico de inventario completado con éxito. Producto: Producto Genérico ID 6, Cantidad Resultante: 38

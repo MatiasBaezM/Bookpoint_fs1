@@ -8,7 +8,6 @@ import cl.bookpointchile.inventario.exception.SucursalNoEncontradaException;
 import cl.bookpointchile.inventario.model.Inventario;
 import cl.bookpointchile.inventario.repository.InventarioRepository;
 import feign.FeignException;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,6 @@ import java.util.stream.Collectors;
 public class InventarioServiceImpl implements InventarioService {
 
     private final InventarioRepository inventarioRepository;
-    private final RabbitTemplate rabbitTemplate;
     private final SucursalesClient sucursalesClient;
 
     @Override
@@ -175,76 +173,71 @@ public class InventarioServiceImpl implements InventarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public StockResponseDTO verificarDisponibilidad(Long productoId, Integer cantidad) {
-        log.info("Verificando disponibilidad de stock global/centralizado para producto ID: {}, cantidad: {}", productoId, cantidad);
-        
-        List<Inventario> stocks = inventarioRepository.findByProductoId(productoId);
+    public StockResponseDTO verificarDisponibilidad(Long sucursalId, Long productoId, Integer cantidad) {
+        log.info("Verificando disponibilidad de stock en Sucursal ID: {} para producto ID: {}, cantidad: {}",
+                sucursalId, productoId, cantidad);
 
-        int stockActualTotal = stocks.stream()
-                .mapToInt(Inventario::getCantidad)
-                .sum();
+        int stockActual = inventarioRepository.findByProductoIdAndSucursalId(productoId, sucursalId)
+                .map(Inventario::getCantidad)
+                .orElse(0);
 
-        boolean disponible = stockActualTotal >= cantidad;
-        log.info("Resultado stock para producto ID {}: Total disponible = {}, Cantidad Solicitada = {}, ¿Disponible? = {}", 
-                productoId, stockActualTotal, cantidad, disponible);
+        boolean disponible = stockActual >= cantidad;
+        log.info("Resultado stock para producto ID {} en sucursal ID {}: Disponible = {}, Cantidad Solicitada = {}, ¿Alcanza? = {}",
+                productoId, sucursalId, stockActual, cantidad, disponible);
 
         return StockResponseDTO.builder()
                 .productoId(productoId)
+                .sucursalId(sucursalId)
                 .disponible(disponible)
-                .stockActual(stockActualTotal)
+                .stockActual(stockActual)
                 .build();
     }
 
     @Override
     @Transactional
-    public void procesarVentaCreada(cl.bookpointchile.inventario.event.VentaCreadaEvent event) {
-        log.info("Procesando VentaCreadaEvent para Venta ID: {}, Folio: {}", event.getVentaId(), event.getFolio());
-        
-        try {
-            // Verificar stock para todos los detalles primero
-            for (cl.bookpointchile.inventario.event.DetalleVentaEvent detalle : event.getDetalles()) {
-                StockResponseDTO stock = verificarDisponibilidad(detalle.getProductoId(), detalle.getCantidad());
-                if (!stock.isDisponible()) {
-                    log.warn("Stock insuficiente para Producto ID: {}. Solicitado: {}, Disponible: {}", detalle.getProductoId(), detalle.getCantidad(), stock.getStockActual());
-                    throw new RuntimeException("Stock insuficiente para Producto ID: " + detalle.getProductoId() + ". Disponible: " + stock.getStockActual());
-                }
-            }
+    public void descontarStockVenta(DescontarStockRequestDTO request) {
+        Long sucursalId = request.getSucursalId();
+        log.info("Descontando stock de la Sucursal ID: {} para Venta ID: {}, Folio: {}",
+                sucursalId, request.getVentaId(), request.getFolio());
 
-            // Si todos tienen stock, proceder a descontar de forma global (empezando por la primera sucursal con stock)
-            for (cl.bookpointchile.inventario.event.DetalleVentaEvent detalle : event.getDetalles()) {
-                List<Inventario> stocks = inventarioRepository.findByProductoId(detalle.getProductoId()).stream()
-                        .filter(i -> i.getCantidad() > 0)
-                        .collect(Collectors.toList());
-                
-                int cantidadPorDescontar = detalle.getCantidad();
-                for (Inventario inv : stocks) {
-                    if (cantidadPorDescontar <= 0) break;
-                    
-                    int descontar = Math.min(inv.getCantidad(), cantidadPorDescontar);
-                    inv.setCantidad(inv.getCantidad() - descontar);
-                    inventarioRepository.save(inv);
-                    cantidadPorDescontar -= descontar;
-                }
-            }
-
-            // Publicar StockReservadoEvent
-            cl.bookpointchile.inventario.event.StockReservadoEvent reservadoEvent = cl.bookpointchile.inventario.event.StockReservadoEvent.builder()
-                    .ventaId(event.getVentaId())
-                    .folio(event.getFolio())
-                    .build();
-            rabbitTemplate.convertAndSend(cl.bookpointchile.inventario.config.RabbitMQConfig.EXCHANGE_VENTAS, cl.bookpointchile.inventario.config.RabbitMQConfig.ROUTING_KEY_STOCK_RESERVADO, reservadoEvent);
-            log.info("StockReservadoEvent emitido exitosamente para Venta ID: {}", event.getVentaId());
-
-        } catch (Exception e) {
-            // Publicar StockRechazadoEvent
-            cl.bookpointchile.inventario.event.StockRechazadoEvent rechazadoEvent = cl.bookpointchile.inventario.event.StockRechazadoEvent.builder()
-                    .ventaId(event.getVentaId())
-                    .folio(event.getFolio())
-                    .motivo(e.getMessage())
-                    .build();
-            rabbitTemplate.convertAndSend(cl.bookpointchile.inventario.config.RabbitMQConfig.EXCHANGE_VENTAS, cl.bookpointchile.inventario.config.RabbitMQConfig.ROUTING_KEY_STOCK_RECHAZADO, rechazadoEvent);
-            log.info("StockRechazadoEvent emitido por falta de stock u error para Venta ID: {}", event.getVentaId());
+        if (sucursalId == null) {
+            throw new SucursalNoEncontradaException("La venta '" + request.getFolio() +
+                    "' no indica la sucursal en la que se realizó; no es posible descontar el stock.");
         }
+
+        SucursalMaestraResponseDTO sucursal = validarSucursalActivaEnMaestro(sucursalId);
+
+        // Primero se validan todos los detalles contra el stock de ESA sucursal, para no
+        // descontar nada si alguna línea no alcanza.
+        for (DetalleStockRequestDTO detalle : request.getDetalles()) {
+            Inventario inv = inventarioRepository
+                    .findByProductoIdAndSucursalId(detalle.getProductoId(), sucursalId)
+                    .orElseThrow(() -> new StockInsuficienteException("El producto ID " + detalle.getProductoId() +
+                            " no tiene stock registrado en la sucursal '" + sucursal.getNombre() + "'."));
+
+            if (inv.getCantidad() < detalle.getCantidad()) {
+                log.warn("Stock insuficiente en sucursal '{}' para Producto ID: {}. Solicitado: {}, Disponible: {}",
+                        sucursal.getNombre(), detalle.getProductoId(), detalle.getCantidad(), inv.getCantidad());
+                throw new StockInsuficienteException("Stock insuficiente para el producto ID " + detalle.getProductoId() +
+                        " en la sucursal '" + sucursal.getNombre() + "'. Disponible: " + inv.getCantidad() +
+                        ", Solicitado: " + detalle.getCantidad());
+            }
+        }
+
+        for (DetalleStockRequestDTO detalle : request.getDetalles()) {
+            Inventario inv = inventarioRepository
+                    .findByProductoIdAndSucursalId(detalle.getProductoId(), sucursalId)
+                    .orElseThrow(() -> new StockInsuficienteException("El producto ID " + detalle.getProductoId() +
+                            " no tiene stock registrado en la sucursal '" + sucursal.getNombre() + "'."));
+
+            inv.setCantidad(inv.getCantidad() - detalle.getCantidad());
+            inventarioRepository.save(inv);
+            log.info("Stock descontado. Producto ID: {}, Sucursal: '{}', Descontado: {}, Stock resultante: {}",
+                    detalle.getProductoId(), sucursal.getNombre(), detalle.getCantidad(), inv.getCantidad());
+        }
+
+        log.info("Descuento de stock completado para Venta ID: {} en la sucursal '{}'.",
+                request.getVentaId(), sucursal.getNombre());
     }
 
     // Valida la sucursal local contra el maestro de sucursales (ms-sucursales) y retorna su información

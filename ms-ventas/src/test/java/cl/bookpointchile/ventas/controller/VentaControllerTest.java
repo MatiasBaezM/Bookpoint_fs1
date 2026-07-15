@@ -43,6 +43,7 @@ class VentaControllerTest {
     private VentaRequestDTO requestValido() {
         return VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.PRESENCIAL)
+                .sucursalId(1L)
                 .clienteNombre("Camila Soto")
                 .asistenteNombre("Pedro Vega")
                 .detalles(List.of(DetalleVentaRequestDTO.builder()
@@ -71,6 +72,7 @@ class VentaControllerTest {
     void registrarVentaSinDetalles_retorna400() throws Exception {
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
                 .detalles(List.of()) // @NotEmpty falla
                 .build();
 
@@ -78,6 +80,39 @@ class VentaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void registrarVentaSinSucursal_retorna400() throws Exception {
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.PRESENCIAL)
+                .clienteNombre("Camila Soto")
+                .asistenteNombre("Pedro Vega")
+                .detalles(List.of(DetalleVentaRequestDTO.builder()
+                        .productoId(1L).productoNombre("Libro").cantidad(2)
+                        .precioUnitario(new BigDecimal("12990")).build()))
+                .build(); // @NotNull de sucursalId falla
+
+        mockMvc.perform(post("/api/ventas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void registrarVenta_exponeLaSucursalEnLaRespuesta() throws Exception {
+        VentaResponseDTO response = VentaResponseDTO.builder()
+                .id(1L).folio("BP-PRE-ABCD1234").tipoVenta(TipoVenta.PRESENCIAL)
+                .sucursalId(3L).usuarioId(5L).total(new BigDecimal("25980.00")).build();
+
+        Mockito.when(ventaService.registrarVenta(any(VentaRequestDTO.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/ventas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestValido())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.sucursalId").value(3))
+                .andExpect(jsonPath("$.usuarioId").value(5));
     }
 
     @Test

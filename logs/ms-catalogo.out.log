@@ -1,0 +1,76 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:03:03.057-04:00  INFO 18836 --- [ms-catalogo] [           main] c.b.catalogo.CatalogoApplication         : Starting CatalogoApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 18836 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-catalogo\target\catalogo-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-catalogo)
+2026-07-15T11:03:03.074-04:00  INFO 18836 --- [ms-catalogo] [           main] c.b.catalogo.CatalogoApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:03:07.994-04:00  INFO 18836 --- [ms-catalogo] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:03:08.206-04:00  INFO 18836 --- [ms-catalogo] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 173 ms. Found 2 JPA repository interfaces.
+2026-07-15T11:03:11.911-04:00  INFO 18836 --- [ms-catalogo] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8084 (http)
+2026-07-15T11:03:11.956-04:00  INFO 18836 --- [ms-catalogo] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:03:11.957-04:00  INFO 18836 --- [ms-catalogo] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:03:12.102-04:00  INFO 18836 --- [ms-catalogo] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 8753 ms
+2026-07-15T11:03:13.825-04:00  INFO 18836 --- [ms-catalogo] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:03:14.141-04:00  INFO 18836 --- [ms-catalogo] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:03:16.216-04:00  INFO 18836 --- [ms-catalogo] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:03:16.334-04:00  INFO 18836 --- [ms-catalogo] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:03:16.805-04:00  INFO 18836 --- [ms-catalogo] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2e6b379c
+2026-07-15T11:03:16.809-04:00  INFO 18836 --- [ms-catalogo] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:03:16.963-04:00  WARN 18836 --- [ms-catalogo] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:03:17.036-04:00  INFO 18836 --- [ms-catalogo] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_catalogo?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_catalogo/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:03:19.530-04:00  INFO 18836 --- [ms-catalogo] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-15T11:03:21.951-04:00  INFO 18836 --- [ms-catalogo] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:03:22.497-04:00  INFO 18836 --- [ms-catalogo] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:03:27.007-04:00  WARN 18836 --- [ms-catalogo] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:03:28.319-04:00  INFO 18836 --- [ms-catalogo] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:03:28.525-04:00  INFO 18836 --- [ms-catalogo] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8084 (http) with context path '/'
+2026-07-15T11:03:28.546-04:00  INFO 18836 --- [ms-catalogo] [           main] c.b.catalogo.CatalogoApplication         : Started CatalogoApplication in 27.395 seconds (process running for 29.965)
+Hibernate: 
+    select
+        count(*) 
+    from
+        productos p1_0
+2026-07-15T11:03:28.903-04:00  INFO 18836 --- [ms-catalogo] [           main] c.b.catalogo.config.DataInitializer      : Catálogo de ms-catalogo ya se encuentra sembrado en la base de datos.
+2026-07-15T11:03:28.905-04:00  WARN 18836 --- [ms-catalogo] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:03:28.906-04:00  WARN 18836 --- [ms-catalogo] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:02.971-04:00  WARN 18836 --- [ms-catalogo] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m16s46ms256µs800ns).
+2026-07-15T11:28:54.292-04:00  INFO 18836 --- [ms-catalogo] [nio-8084-exec-4] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-15T11:28:54.294-04:00  INFO 18836 --- [ms-catalogo] [nio-8084-exec-4] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-15T11:28:54.297-04:00  INFO 18836 --- [ms-catalogo] [nio-8084-exec-4] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
+2026-07-15T11:28:54.743-04:00  INFO 18836 --- [ms-catalogo] [nio-8084-exec-4] c.b.c.service.CatalogoServiceImpl        : Registrando nuevo producto en el catálogo: 'Test Prod' de 'A'
+Hibernate: 
+    select
+        p1_0.id 
+    from
+        productos p1_0 
+    where
+        upper(p1_0.titulo)=upper(?) 
+        and upper(p1_0.autor)=upper(?) 
+        and upper(p1_0.editorial)=upper(?) 
+    limit
+        ?
+Hibernate: 
+    insert 
+    into
+        productos
+        (autor, categoria, descripcion, editorial, precio, titulo) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-07-15T11:28:55.042-04:00  INFO 18836 --- [ms-catalogo] [nio-8084-exec-4] c.b.c.service.CatalogoServiceImpl        : Producto guardado con éxito. ID asignado: 6

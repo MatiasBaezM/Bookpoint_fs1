@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StockResponseDTO {
     private Long productoId;
+    private Long sucursalId;
     private boolean disponible;
     private Integer stockActual;
 }

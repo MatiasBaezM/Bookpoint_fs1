@@ -1,7 +1,10 @@
 package cl.bookpointchile.facturacion.controller;
 
+import cl.bookpointchile.facturacion.dto.DetalleDocumentoRequestDTO;
+import cl.bookpointchile.facturacion.dto.DetalleDocumentoResponseDTO;
 import cl.bookpointchile.facturacion.dto.DocumentoResponseDTO;
 import cl.bookpointchile.facturacion.dto.EmitirDocumentoRequestDTO;
+import cl.bookpointchile.facturacion.exception.DatosFacturacionIncompletosException;
 import cl.bookpointchile.facturacion.exception.DocumentoNoEncontradoException;
 import cl.bookpointchile.facturacion.service.FacturacionService;
 
@@ -15,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -56,6 +60,66 @@ class FacturacionControllerTest {
     void emitirDocumentoInvalido_retorna400() throws Exception {
         EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
                 .rutCliente("1-9").build(); // faltan folioVenta, tipoDocumento, montoNeto
+
+        mockMvc.perform(post("/api/facturacion/emitir")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void emitirDocumento_exponeVentaUsuarioSucursalYDetalle() throws Exception {
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0).build();
+
+        Mockito.when(service.emitirDocumento(any()))
+                .thenReturn(DocumentoResponseDTO.builder()
+                        .id(1L).folioVenta("BP-PRE-0001")
+                        .ventaId(50L).usuarioId(7L).sucursalId(2L)
+                        .montoTotal(11900.0)
+                        .detalles(List.of(DetalleDocumentoResponseDTO.builder()
+                                .id(1L).productoId(101L).productoNombre("Libro de Prueba")
+                                .cantidad(2).precioUnitario(new BigDecimal("5950.00"))
+                                .subtotal(new BigDecimal("11900.00")).build()))
+                        .build());
+
+        mockMvc.perform(post("/api/facturacion/emitir")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.ventaId").value(50))
+                .andExpect(jsonPath("$.usuarioId").value(7))
+                .andExpect(jsonPath("$.sucursalId").value(2))
+                .andExpect(jsonPath("$.detalles[0].productoId").value(101))
+                .andExpect(jsonPath("$.detalles[0].cantidad").value(2));
+    }
+
+    @Test
+    void emitirDocumentoConDetalleInvalido_retorna400() throws Exception {
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0)
+                .detalles(List.of(DetalleDocumentoRequestDTO.builder()
+                        .productoId(101L).productoNombre("Libro")
+                        .cantidad(0) // @Min(1) falla
+                        .precioUnitario(new BigDecimal("5950.00")).build()))
+                .build();
+
+        mockMvc.perform(post("/api/facturacion/emitir")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void emitirDocumentoDeVentaSinSucursal_retorna400() throws Exception {
+        EmitirDocumentoRequestDTO request = EmitirDocumentoRequestDTO.builder()
+                .folioVenta("BP-PRE-0001").rutCliente("19876543-2")
+                .tipoDocumento("BOLETA").montoNeto(10000.0).build();
+
+        Mockito.when(service.emitirDocumento(any()))
+                .thenThrow(new DatosFacturacionIncompletosException("La venta no tiene una sucursal asociada."));
 
         mockMvc.perform(post("/api/facturacion/emitir")
                         .contentType(MediaType.APPLICATION_JSON)

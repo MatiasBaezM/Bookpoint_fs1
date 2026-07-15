@@ -21,6 +21,7 @@ public class VentaResponseDTO {
     private LocalDateTime fecha;
     private TipoVenta tipoVenta;
     private cl.bookpointchile.ventas.model.EstadoVenta estado;
+    private Long sucursalId;
     private Long usuarioId;
     private String clienteNombre;
     private String clienteRut;

@@ -1,0 +1,53 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:03:03.041-04:00  INFO 21276 --- [ms-promociones] [           main] c.b.promociones.PromocionesApplication   : Starting PromocionesApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 21276 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-promociones\target\promociones-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-promociones)
+2026-07-15T11:03:03.068-04:00  INFO 21276 --- [ms-promociones] [           main] c.b.promociones.PromocionesApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:03:07.987-04:00  INFO 21276 --- [ms-promociones] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:03:08.176-04:00  INFO 21276 --- [ms-promociones] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 154 ms. Found 1 JPA repository interface.
+2026-07-15T11:03:11.814-04:00  INFO 21276 --- [ms-promociones] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8087 (http)
+2026-07-15T11:03:11.858-04:00  INFO 21276 --- [ms-promociones] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:03:11.861-04:00  INFO 21276 --- [ms-promociones] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:03:11.956-04:00  INFO 21276 --- [ms-promociones] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 8614 ms
+2026-07-15T11:03:13.867-04:00  INFO 21276 --- [ms-promociones] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:03:14.158-04:00  INFO 21276 --- [ms-promociones] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:03:16.285-04:00  INFO 21276 --- [ms-promociones] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:03:16.410-04:00  INFO 21276 --- [ms-promociones] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:03:16.834-04:00  INFO 21276 --- [ms-promociones] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@38923cfe
+2026-07-15T11:03:16.838-04:00  INFO 21276 --- [ms-promociones] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:03:17.002-04:00  WARN 21276 --- [ms-promociones] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:03:17.077-04:00  INFO 21276 --- [ms-promociones] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_promociones?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_promociones/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:03:19.351-04:00  INFO 21276 --- [ms-promociones] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-15T11:03:19.557-04:00  INFO 21276 --- [ms-promociones] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:03:19.774-04:00  INFO 21276 --- [ms-promociones] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:03:20.717-04:00  WARN 21276 --- [ms-promociones] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:03:23.057-04:00  INFO 21276 --- [ms-promociones] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:03:23.353-04:00  INFO 21276 --- [ms-promociones] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8087 (http) with context path '/'
+2026-07-15T11:03:23.385-04:00  INFO 21276 --- [ms-promociones] [           main] c.b.promociones.PromocionesApplication   : Started PromocionesApplication in 22.193 seconds (process running for 24.743)
+Hibernate: 
+    select
+        count(*) 
+    from
+        promociones p1_0
+2026-07-15T11:03:25.405-04:00  INFO 21276 --- [ms-promociones] [           main] c.b.promociones.config.DataInitializer   : Catálogo de ms-promociones ya se encuentra sembrado en la base de datos.
+2026-07-15T11:03:25.408-04:00  WARN 21276 --- [ms-promociones] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:03:25.409-04:00  WARN 21276 --- [ms-promociones] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:06.788-04:00  WARN 21276 --- [ms-promociones] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m19s829ms386µs800ns).

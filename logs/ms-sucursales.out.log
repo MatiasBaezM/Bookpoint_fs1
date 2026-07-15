@@ -1,0 +1,362 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:03:02.882-04:00  INFO 20988 --- [ms-sucursales] [           main] c.b.sucursales.SucursalesApplication     : Starting SucursalesApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 20988 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-sucursales\target\sucursales-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-sucursales)
+2026-07-15T11:03:02.897-04:00  INFO 20988 --- [ms-sucursales] [           main] c.b.sucursales.SucursalesApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:03:07.833-04:00  INFO 20988 --- [ms-sucursales] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:03:08.026-04:00  INFO 20988 --- [ms-sucursales] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 140 ms. Found 1 JPA repository interface.
+2026-07-15T11:03:11.668-04:00  INFO 20988 --- [ms-sucursales] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8090 (http)
+2026-07-15T11:03:11.729-04:00  INFO 20988 --- [ms-sucursales] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:03:11.733-04:00  INFO 20988 --- [ms-sucursales] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:03:11.866-04:00  INFO 20988 --- [ms-sucursales] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 8662 ms
+2026-07-15T11:03:13.699-04:00  INFO 20988 --- [ms-sucursales] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:03:14.051-04:00  INFO 20988 --- [ms-sucursales] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:03:16.107-04:00  INFO 20988 --- [ms-sucursales] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:03:16.226-04:00  INFO 20988 --- [ms-sucursales] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:03:16.742-04:00  INFO 20988 --- [ms-sucursales] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1ac3a6f
+2026-07-15T11:03:16.746-04:00  INFO 20988 --- [ms-sucursales] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:03:16.873-04:00  WARN 20988 --- [ms-sucursales] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:03:16.927-04:00  INFO 20988 --- [ms-sucursales] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_sucursales?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_sucursales/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:03:19.224-04:00  INFO 20988 --- [ms-sucursales] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-15T11:03:19.480-04:00  INFO 20988 --- [ms-sucursales] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:03:19.679-04:00  INFO 20988 --- [ms-sucursales] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:03:20.647-04:00  WARN 20988 --- [ms-sucursales] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:03:22.964-04:00  INFO 20988 --- [ms-sucursales] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:03:23.288-04:00  INFO 20988 --- [ms-sucursales] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8090 (http) with context path '/'
+2026-07-15T11:03:23.320-04:00  INFO 20988 --- [ms-sucursales] [           main] c.b.sucursales.SucursalesApplication     : Started SucursalesApplication in 22.42 seconds (process running for 24.993)
+Hibernate: 
+    select
+        count(*) 
+    from
+        sucursales s1_0
+2026-07-15T11:03:25.440-04:00  INFO 20988 --- [ms-sucursales] [           main] c.b.sucursales.config.DataInitializer    : El maestro de datos de ms-sucursales ya contiene sedes registradas.
+2026-07-15T11:03:25.444-04:00  WARN 20988 --- [ms-sucursales] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:03:25.445-04:00  WARN 20988 --- [ms-sucursales] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:02.423-04:00  WARN 20988 --- [ms-sucursales] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m15s536ms129µs600ns).
+2026-07-15T11:28:52.646-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-3] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-15T11:28:52.647-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-3] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-15T11:28:52.650-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-3] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-07-15T11:28:53.164-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-3] c.b.s.service.SucursalServiceImpl        : Iniciando la inauguración de una nueva sucursal: 'Test A'
+Hibernate: 
+    select
+        s1_0.id 
+    from
+        sucursales s1_0 
+    where
+        upper(s1_0.nombre)=upper(?) 
+    limit
+        ?
+Hibernate: 
+    insert 
+    into
+        sucursales
+        (comuna, direccion, estado_operativo, horario_atencion, nombre, region, telefono) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2026-07-15T11:28:53.534-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-3] c.b.s.service.SucursalServiceImpl        : Sucursal 'Test A' inaugurada de manera exitosa. ID asignado: 4
+2026-07-15T11:28:53.986-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-5] c.b.s.service.SucursalServiceImpl        : Iniciando la inauguración de una nueva sucursal: 'Test B'
+Hibernate: 
+    select
+        s1_0.id 
+    from
+        sucursales s1_0 
+    where
+        upper(s1_0.nombre)=upper(?) 
+    limit
+        ?
+Hibernate: 
+    insert 
+    into
+        sucursales
+        (comuna, direccion, estado_operativo, horario_atencion, nombre, region, telefono) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2026-07-15T11:28:53.995-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-5] c.b.s.service.SucursalServiceImpl        : Sucursal 'Test B' inaugurada de manera exitosa. ID asignado: 5
+2026-07-15T11:29:06.201-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-7] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:29:07.024-04:00  INFO 20988 --- [ms-sucursales] [io-8090-exec-10] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 5
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:31:15.801-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-9] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:31:15.859-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-1] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:31:15.987-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-4] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 5
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:31:16.014-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-2] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 5
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:31:43.570-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-3] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:32:05.004-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-5] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:32:05.020-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-6] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:32:05.109-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-7] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 5
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:32:05.123-04:00  INFO 20988 --- [ms-sucursales] [io-8090-exec-10] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 5
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:32:34.588-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-8] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:33:02.750-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-9] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 5
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:33:02.889-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-1] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 5
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:33:51.683-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-4] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:33:51.701-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-2] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:33:52.400-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-3] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?
+2026-07-15T11:33:52.415-04:00  INFO 20988 --- [ms-sucursales] [nio-8090-exec-5] c.b.s.service.SucursalServiceImpl        : Buscando sucursal por ID: 4
+Hibernate: 
+    select
+        s1_0.id,
+        s1_0.comuna,
+        s1_0.direccion,
+        s1_0.estado_operativo,
+        s1_0.horario_atencion,
+        s1_0.nombre,
+        s1_0.region,
+        s1_0.telefono 
+    from
+        sucursales s1_0 
+    where
+        s1_0.id=?

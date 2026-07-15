@@ -20,6 +20,9 @@ public class VentaRequestDTO {
     @NotNull(message = "El tipo de venta (PRESENCIAL o ONLINE) es obligatorio")
     private TipoVenta tipoVenta;
 
+    @NotNull(message = "La sucursal de la venta es obligatoria")
+    private Long sucursalId; // Sucursal desde la que se vende y de la que se descuenta el stock
+
     private Long usuarioId; // ID del usuario registrado (opcional; si se provee, se obtienen nombre y RUT automáticamente)
     private String clienteNombre;
     private String clienteRut;

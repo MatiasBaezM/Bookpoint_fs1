@@ -36,6 +36,9 @@ public class Venta {
     @Builder.Default
     private EstadoVenta estado = EstadoVenta.PENDIENTE;
 
+    @Column(name = "sucursal_id", nullable = false)
+    private Long sucursalId; // Sucursal donde se concreta la venta; define de qué stock se descuenta
+
     @Column(name = "usuario_id")
     private Long usuarioId;
 

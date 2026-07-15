@@ -1,6 +1,7 @@
 package cl.bookpointchile.inventario.controller;
 
 import cl.bookpointchile.inventario.dto.*;
+import cl.bookpointchile.inventario.exception.StockInsuficienteException;
 import cl.bookpointchile.inventario.exception.SucursalNoEncontradaException;
 import cl.bookpointchile.inventario.service.InventarioService;
 
@@ -98,12 +99,21 @@ class InventarioControllerTest {
 
     @Test
     void checkStock_retorna200() throws Exception {
-        Mockito.when(inventarioService.verificarDisponibilidad(anyLong(), anyInt()))
-                .thenReturn(StockResponseDTO.builder().productoId(1L).disponible(true).stockActual(50).build());
+        Mockito.when(inventarioService.verificarDisponibilidad(anyLong(), anyLong(), anyInt()))
+                .thenReturn(StockResponseDTO.builder()
+                        .productoId(1L).sucursalId(1L).disponible(true).stockActual(50).build());
 
-        mockMvc.perform(get("/api/inventario/check-stock").param("productoId", "1").param("cantidad", "5"))
+        mockMvc.perform(get("/api/inventario/check-stock")
+                        .param("sucursalId", "1").param("productoId", "1").param("cantidad", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.disponible").value(true));
+                .andExpect(jsonPath("$.disponible").value(true))
+                .andExpect(jsonPath("$.sucursalId").value(1L));
+    }
+
+    @Test
+    void checkStockSinSucursal_retorna400() throws Exception {
+        mockMvc.perform(get("/api/inventario/check-stock").param("productoId", "1").param("cantidad", "5"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -124,5 +134,47 @@ class InventarioControllerTest {
         mockMvc.perform(get("/api/inventario/sucursal/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].sucursalId").value(1L));
+    }
+
+    @Test
+    void descontarStock_retorna200() throws Exception {
+        DescontarStockRequestDTO request = DescontarStockRequestDTO.builder()
+                .ventaId(1L).folio("BP-PRE-0001").sucursalId(1L).usuarioId(7L)
+                .detalles(List.of(DetalleStockRequestDTO.builder().productoId(101L).cantidad(2).build()))
+                .build();
+
+        mockMvc.perform(post("/api/inventario/descuento")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void descontarStockSinDetalle_retorna400() throws Exception {
+        DescontarStockRequestDTO request = DescontarStockRequestDTO.builder()
+                .ventaId(1L).folio("BP-PRE-0001").sucursalId(1L)
+                .detalles(List.of()) // @NotEmpty falla
+                .build();
+
+        mockMvc.perform(post("/api/inventario/descuento")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void descontarStockInsuficiente_retorna400() throws Exception {
+        DescontarStockRequestDTO request = DescontarStockRequestDTO.builder()
+                .ventaId(1L).folio("BP-PRE-0001").sucursalId(1L)
+                .detalles(List.of(DetalleStockRequestDTO.builder().productoId(101L).cantidad(999).build()))
+                .build();
+
+        Mockito.doThrow(new StockInsuficienteException("Stock insuficiente"))
+                .when(inventarioService).descontarStockVenta(any());
+
+        mockMvc.perform(post("/api/inventario/descuento")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

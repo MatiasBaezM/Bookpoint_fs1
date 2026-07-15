@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "b00kp01n-fs01-4a1d-9e2c-bookpointchile01",
 		"name": "Bookpoint Chile - Microservicios",
-		"description": "Colección de pruebas para los 10 microservicios de Bookpoint Chile.\n\nCada carpeta corresponde a un microservicio y usa una variable de base URL propia (definida en el environment 'Bookpoint - Local').\n\nLos tests validan el código de estado HTTP y, en los POST de creación, guardan IDs/folios en variables de colección para encadenar peticiones.",
+		"description": "Colección de pruebas para los 10 microservicios de Bookpoint Chile.\n\nCada carpeta corresponde a un microservicio y usa una variable de base URL propia (definida en el environment 'Bookpoint - Local'). La primera carpeta, '0) Flujo E2E', encadena varias peticiones para demostrar de punta a punta que el stock se descuenta solo de la sucursal donde se realiza la compra, que la facturación queda automáticamente ligada a la venta/usuario/sucursal, y el nuevo endpoint síncrono de descuento de stock.\n\nLos tests validan el código de estado HTTP esperado (incluyendo casos negativos: 400/404/409) y, en los POST de creación, guardan IDs/folios en variables de colección para encadenar peticiones.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"event": [
@@ -11,11 +11,10 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					"// Test global aplicado a TODAS las peticiones",
-					"pm.test(\"El status es 2xx (exitoso)\", function () {",
-					"    pm.expect(pm.response.code).to.be.within(200, 299);",
-					"});",
-					"",
+					"// Test global aplicado a TODAS las peticiones.",
+					"// No se valida un status 2xx genérico aquí porque varias peticiones de la colección",
+					"// prueban deliberadamente casos negativos (400/404/409); cada petición valida su propio",
+					"// status esperado en su script de test individual.",
 					"pm.test(\"Tiempo de respuesta < 3000ms\", function () {",
 					"    pm.expect(pm.response.responseTime).to.be.below(3000);",
 					"});"
@@ -24,6 +23,464 @@
 		}
 	],
 	"item": [
+		{
+			"name": "0) Flujo E2E - Stock por Sucursal y Facturación",
+			"description": "Demuestra el comportamiento central del sistema:\n1. El stock se descuenta SOLO de la sucursal donde ocurre la venta (no se 'presta' de otra sucursal aunque la red tenga stock suficiente en conjunto).\n2. Al registrar una venta, ms-ventas descuenta el stock de forma SÍNCRONA en ms-inventario (POST /api/inventario/descuento) y fija el estado final (COMPLETADA/RECHAZADA) en la misma respuesta.\n3. Al confirmarse la venta, se emite automáticamente un documento tributario en ms-facturacion, ligado a ventaId/usuarioId/sucursalId y el detalle de productos.\n\nEjecutar las peticiones EN ORDEN (Collection Runner o una por una).",
+			"item": [
+				{
+					"name": "1. POST Registrar usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('e2eUsuarioId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rut\": \"20111222-3\",\n  \"nombre\": \"Diego Fuentes\",\n  \"email\": \"diego.fuentes.e2e@example.com\",\n  \"password\": \"Segura1234\",\n  \"rolId\": null\n}"
+						},
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/registro",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "registro"]
+						}
+					}
+				},
+				{
+					"name": "2. POST Crear Sucursal A (Concepción)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('e2eSucursalAId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Sucursal E2E Concepción\",\n  \"direccion\": \"Av. Libertad 1234\",\n  \"comuna\": \"Concepción\",\n  \"region\": \"Región del Biobío\",\n  \"telefono\": \"+56 41 234 5678\",\n  \"horarioAtencion\": \"Lunes a Viernes 09:00 a 18:30\",\n  \"estadoOperativo\": \"ACTIVO\"\n}"
+						},
+						"url": {
+							"raw": "{{sucursalesUrl}}/api/sucursales",
+							"host": ["{{sucursalesUrl}}"],
+							"path": ["api", "sucursales"]
+						}
+					}
+				},
+				{
+					"name": "3. POST Crear Sucursal B (Temuco)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('e2eSucursalBId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Sucursal E2E Temuco\",\n  \"direccion\": \"Av. Alemania 987\",\n  \"comuna\": \"Temuco\",\n  \"region\": \"Región de la Araucanía\",\n  \"telefono\": \"+56 45 234 5678\",\n  \"horarioAtencion\": \"Lunes a Viernes 09:00 a 18:30\",\n  \"estadoOperativo\": \"ACTIVO\"\n}"
+						},
+						"url": {
+							"raw": "{{sucursalesUrl}}/api/sucursales",
+							"host": ["{{sucursalesUrl}}"],
+							"path": ["api", "sucursales"]
+						}
+					}
+				},
+				{
+					"name": "4. POST Registrar producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set('e2eProductoId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Fundamentos de Microservicios\",\n  \"autor\": \"Martin Kleppmann\",\n  \"editorial\": \"O'Reilly\",\n  \"precio\": 15000,\n  \"categoria\": \"Tecnología\",\n  \"descripcion\": \"Producto usado para el flujo E2E de stock por sucursal.\"\n}"
+						},
+						"url": {
+							"raw": "{{catalogoUrl}}/api/catalogo/productos",
+							"host": ["{{catalogoUrl}}"],
+							"path": ["api", "catalogo", "productos"]
+						}
+					}
+				},
+				{
+					"name": "5. PUT Ajuste stock en Sucursal A (+50)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Cantidad resultante es 50\", () => pm.expect(pm.response.json().cantidad).to.eql(50));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productoId\": {{e2eProductoId}},\n  \"sucursalId\": {{e2eSucursalAId}},\n  \"cantidadAjuste\": 50,\n  \"motivo\": \"Carga inicial E2E - Sucursal A\"\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/ajuste",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "ajuste"]
+						}
+					}
+				},
+				{
+					"name": "6. PUT Ajuste stock en Sucursal B (+3)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Cantidad resultante es 3\", () => pm.expect(pm.response.json().cantidad).to.eql(3));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productoId\": {{e2eProductoId}},\n  \"sucursalId\": {{e2eSucursalBId}},\n  \"cantidadAjuste\": 3,\n  \"motivo\": \"Carga inicial E2E - Sucursal B (stock bajo a propósito)\"\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/ajuste",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "ajuste"]
+						}
+					}
+				},
+				{
+					"name": "7. GET Check stock en Sucursal A (alcanza)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Disponible = true (50 >= 10)\", () => pm.expect(pm.response.json().disponible).to.eql(true));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/check-stock?sucursalId={{e2eSucursalAId}}&productoId={{e2eProductoId}}&cantidad=10",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "check-stock"],
+							"query": [
+								{ "key": "sucursalId", "value": "{{e2eSucursalAId}}" },
+								{ "key": "productoId", "value": "{{e2eProductoId}}" },
+								{ "key": "cantidad", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "8. GET Check stock en Sucursal B (NO alcanza)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Disponible = false (solo 3 en esta sucursal)\", () => pm.expect(pm.response.json().disponible).to.eql(false));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/check-stock?sucursalId={{e2eSucursalBId}}&productoId={{e2eProductoId}}&cantidad=10",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "check-stock"],
+							"query": [
+								{ "key": "sucursalId", "value": "{{e2eSucursalBId}}" },
+								{ "key": "productoId", "value": "{{e2eProductoId}}" },
+								{ "key": "cantidad", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "9. POST Registrar venta en Sucursal B pidiendo 10 -> 400 (no se presta stock de A)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 Bad Request (stock insuficiente en ESA sucursal)\", () => pm.response.to.have.status(400));",
+									"pm.test(\"No genera folio (la venta no se guarda)\", () => pm.expect(pm.response.json().folio).to.be.undefined);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipoVenta\": \"ONLINE\",\n  \"sucursalId\": {{e2eSucursalBId}},\n  \"clienteNombre\": \"Comprador Online\",\n  \"clienteRut\": \"66666666-6\",\n  \"detalles\": [\n    {\n      \"productoId\": {{e2eProductoId}},\n      \"productoNombre\": \"Fundamentos de Microservicios\",\n      \"cantidad\": 10,\n      \"precioUnitario\": 15000\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas"]
+						}
+					}
+				},
+				{
+					"name": "10. POST Registrar venta en Sucursal A pidiendo 10 -> 201 COMPLETADA",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.test(\"Estado final es COMPLETADA (descuento síncrono exitoso)\", () => pm.expect(json.estado).to.eql('COMPLETADA'));",
+									"pm.collectionVariables.set('e2eFolioVenta', json.folio);",
+									"pm.collectionVariables.set('e2eVentaId', json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipoVenta\": \"PRESENCIAL\",\n  \"sucursalId\": {{e2eSucursalAId}},\n  \"usuarioId\": {{e2eUsuarioId}},\n  \"asistenteNombre\": \"Pedro Vega\",\n  \"tipoDocumento\": \"BOLETA\",\n  \"detalles\": [\n    {\n      \"productoId\": {{e2eProductoId}},\n      \"productoNombre\": \"Fundamentos de Microservicios\",\n      \"cantidad\": 10,\n      \"precioUnitario\": 15000\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas"]
+						}
+					}
+				},
+				{
+					"name": "11. GET Stock Sucursal A tras la venta (bajó a 40)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Stock descontado: 50 - 10 = 40\", () => pm.expect(pm.response.json().cantidad).to.eql(40));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/{{e2eSucursalAId}}/producto/{{e2eProductoId}}",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "{{e2eSucursalAId}}", "producto", "{{e2eProductoId}}"]
+						}
+					}
+				},
+				{
+					"name": "12. GET Stock Sucursal B tras la venta (sigue en 3, intacto)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Stock de la Sucursal B NO fue tocado por la venta de la Sucursal A\", () => pm.expect(pm.response.json().cantidad).to.eql(3));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/{{e2eSucursalBId}}/producto/{{e2eProductoId}}",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "{{e2eSucursalBId}}", "producto", "{{e2eProductoId}}"]
+						}
+					}
+				},
+				{
+					"name": "13. GET Documento tributario auto-emitido (por folio de venta)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK (el documento ya se emitió automáticamente al confirmarse la venta)\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"El documento queda ligado a la venta, usuario y sucursal\", () => {",
+									"    pm.expect(json.ventaId).to.eql(pm.collectionVariables.get('e2eVentaId'));",
+									"    pm.expect(String(json.usuarioId)).to.eql(String(pm.collectionVariables.get('e2eUsuarioId')));",
+									"    pm.expect(String(json.sucursalId)).to.eql(String(pm.collectionVariables.get('e2eSucursalAId')));",
+									"});",
+									"pm.test(\"El documento incluye el detalle de productos (código = productoId)\", () => {",
+									"    pm.expect(json.detalles).to.have.lengthOf(1);",
+									"    pm.expect(String(json.detalles[0].productoId)).to.eql(String(pm.collectionVariables.get('e2eProductoId')));",
+									"    pm.expect(json.detalles[0].cantidad).to.eql(10);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{facturacionUrl}}/api/facturacion/venta/{{e2eFolioVenta}}",
+							"host": ["{{facturacionUrl}}"],
+							"path": ["api", "facturacion", "venta", "{{e2eFolioVenta}}"]
+						}
+					}
+				},
+				{
+					"name": "14. POST Emitir documento manual para el mismo folio -> 409 (ya existe)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 409 Conflict (protección contra doble emisión)\", () => pm.response.to.have.status(409));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"folioVenta\": \"{{e2eFolioVenta}}\",\n  \"rutCliente\": \"19876543-2\",\n  \"tipoDocumento\": \"BOLETA\",\n  \"montoNeto\": 126050.42\n}"
+						},
+						"url": {
+							"raw": "{{facturacionUrl}}/api/facturacion/emitir",
+							"host": ["{{facturacionUrl}}"],
+							"path": ["api", "facturacion", "emitir"]
+						}
+					}
+				},
+				{
+					"name": "15. POST Descontar stock (síncrono, manual) en Sucursal B -> 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": {{e2eVentaId}},\n  \"folio\": \"MANUAL-DEMO-0001\",\n  \"sucursalId\": {{e2eSucursalBId}},\n  \"usuarioId\": {{e2eUsuarioId}},\n  \"detalles\": [\n    {\n      \"productoId\": {{e2eProductoId}},\n      \"cantidad\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/descuento",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "descuento"]
+						}
+					}
+				},
+				{
+					"name": "16. POST Descontar stock (síncrono) con cantidad excesiva -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 Bad Request (StockInsuficienteException)\", () => pm.response.to.have.status(400));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": {{e2eVentaId}},\n  \"folio\": \"MANUAL-DEMO-0002\",\n  \"sucursalId\": {{e2eSucursalBId}},\n  \"usuarioId\": {{e2eUsuarioId}},\n  \"detalles\": [\n    {\n      \"productoId\": {{e2eProductoId}},\n      \"cantidad\": 999\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/descuento",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "descuento"]
+						}
+					}
+				}
+			]
+		},
 		{
 			"name": "ms-usuarios (8083)",
 			"item": [
@@ -58,7 +515,70 @@
 					}
 				},
 				{
+					"name": "POST Registrar usuario con email inválido -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rut\": \"11223344-5\",\n  \"nombre\": \"Usuario Inválido\",\n  \"email\": \"no-es-un-correo\",\n  \"password\": \"Segura1234\"\n}"
+						},
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/registro",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "registro"]
+						}
+					}
+				},
+				{
+					"name": "POST Registrar usuario con email duplicado -> 409",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 409 Conflict\", () => pm.response.to.have.status(409));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rut\": \"22334455-6\",\n  \"nombre\": \"Camila Soto Duplicada\",\n  \"email\": \"camila.soto@example.com\",\n  \"password\": \"Segura1234\"\n}"
+						},
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/registro",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "registro"]
+						}
+					}
+				},
+				{
 					"name": "GET Usuario por id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -70,7 +590,58 @@
 					}
 				},
 				{
+					"name": "GET Usuario por rut",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/rut/19876543-2",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "rut", "19876543-2"]
+						}
+					}
+				},
+				{
+					"name": "GET Usuario por id inexistente -> 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{usuariosUrl}}/api/usuarios/999999",
+							"host": ["{{usuariosUrl}}"],
+							"path": ["api", "usuarios", "999999"]
+						}
+					}
+				},
+				{
 					"name": "PUT Actualizar rol",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -121,6 +692,15 @@
 				},
 				{
 					"name": "GET Todas las sucursales",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -133,6 +713,15 @@
 				},
 				{
 					"name": "GET Sucursal por id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -144,7 +733,37 @@
 					}
 				},
 				{
+					"name": "GET Sucursal por id inexistente -> 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{sucursalesUrl}}/api/sucursales/999999",
+							"host": ["{{sucursalesUrl}}"],
+							"path": ["api", "sucursales", "999999"]
+						}
+					}
+				},
+				{
 					"name": "PUT Actualizar sucursal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -195,6 +814,15 @@
 				},
 				{
 					"name": "GET Buscar productos (filtros)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -216,6 +844,15 @@
 				},
 				{
 					"name": "GET Producto por id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -227,7 +864,37 @@
 					}
 				},
 				{
+					"name": "GET Producto por id inexistente -> 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{catalogoUrl}}/api/catalogo/productos/999999",
+							"host": ["{{catalogoUrl}}"],
+							"path": ["api", "catalogo", "productos", "999999"]
+						}
+					}
+				},
+				{
 					"name": "POST Agregar reseña",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));"]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -249,12 +916,46 @@
 			"item": [
 				{
 					"name": "PUT Ajuste físico de stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"productoId\": 1,\n  \"sucursalId\": 1,\n  \"cantidadAjuste\": 50,\n  \"motivo\": \"Reposición inicial de inventario\"\n}"
+							"raw": "{\n  \"productoId\": {{productoId}},\n  \"sucursalId\": {{sucursalId}},\n  \"cantidadAjuste\": 50,\n  \"motivo\": \"Reposición inicial de inventario\"\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/ajuste",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "ajuste"]
+						}
+					}
+				},
+				{
+					"name": "PUT Ajuste físico negativo sin stock previo -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productoId\": 999888,\n  \"sucursalId\": {{sucursalId}},\n  \"cantidadAjuste\": -5,\n  \"motivo\": \"Merma sin stock previo\"\n}"
 						},
 						"url": {
 							"raw": "{{inventarioUrl}}/api/inventario/ajuste",
@@ -265,12 +966,21 @@
 				},
 				{
 					"name": "POST Traslado de stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));"]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"productoId\": 1,\n  \"sucursalOrigenId\": 1,\n  \"sucursalDestinoId\": 2,\n  \"cantidad\": 10\n}"
+							"raw": "{\n  \"productoId\": {{productoId}},\n  \"sucursalOrigenId\": {{sucursalId}},\n  \"sucursalDestinoId\": 2,\n  \"cantidad\": 10\n}"
 						},
 						"url": {
 							"raw": "{{inventarioUrl}}/api/inventario/traslado",
@@ -281,30 +991,57 @@
 				},
 				{
 					"name": "GET Stock por sucursal y producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{inventarioUrl}}/api/inventario/1/producto/1",
+							"raw": "{{inventarioUrl}}/api/inventario/{{sucursalId}}/producto/{{productoId}}",
 							"host": ["{{inventarioUrl}}"],
-							"path": ["api", "inventario", "1", "producto", "1"]
+							"path": ["api", "inventario", "{{sucursalId}}", "producto", "{{productoId}}"]
 						}
 					}
 				},
 				{
 					"name": "GET Stock por sucursal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{inventarioUrl}}/api/inventario/sucursal/1",
+							"raw": "{{inventarioUrl}}/api/inventario/sucursal/{{sucursalId}}",
 							"host": ["{{inventarioUrl}}"],
-							"path": ["api", "inventario", "sucursal", "1"]
+							"path": ["api", "inventario", "sucursal", "{{sucursalId}}"]
 						}
 					}
 				},
 				{
 					"name": "GET Alertas de reposición",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -317,17 +1054,127 @@
 				},
 				{
 					"name": "GET Check stock (Feign)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{inventarioUrl}}/api/inventario/check-stock?productoId=1&cantidad=5",
+							"raw": "{{inventarioUrl}}/api/inventario/check-stock?sucursalId={{sucursalId}}&productoId={{productoId}}&cantidad=5",
 							"host": ["{{inventarioUrl}}"],
 							"path": ["api", "inventario", "check-stock"],
 							"query": [
-								{ "key": "productoId", "value": "1" },
+								{ "key": "sucursalId", "value": "{{sucursalId}}" },
+								{ "key": "productoId", "value": "{{productoId}}" },
 								{ "key": "cantidad", "value": "5" }
 							]
+						}
+					}
+				},
+				{
+					"name": "GET Check stock sin sucursalId -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request (parámetro obligatorio)\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/check-stock?productoId={{productoId}}&cantidad=5",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "check-stock"],
+							"query": [
+								{ "key": "productoId", "value": "{{productoId}}" },
+								{ "key": "cantidad", "value": "5" }
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Descontar stock (síncrono, usado internamente por ms-ventas)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": 1,\n  \"folio\": \"MANUAL-TEST-0001\",\n  \"sucursalId\": {{sucursalId}},\n  \"usuarioId\": {{usuarioId}},\n  \"detalles\": [\n    {\n      \"productoId\": {{productoId}},\n      \"cantidad\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/descuento",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "descuento"]
+						}
+					}
+				},
+				{
+					"name": "POST Descontar stock sin detalle -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": 1,\n  \"folio\": \"MANUAL-TEST-0002\",\n  \"sucursalId\": {{sucursalId}},\n  \"detalles\": []\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/descuento",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "descuento"]
+						}
+					}
+				},
+				{
+					"name": "POST Descontar stock insuficiente -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request (StockInsuficienteException)\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": 1,\n  \"folio\": \"MANUAL-TEST-0003\",\n  \"sucursalId\": {{sucursalId}},\n  \"detalles\": [\n    {\n      \"productoId\": {{productoId}},\n      \"cantidad\": 999999\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{inventarioUrl}}/api/inventario/descuento",
+							"host": ["{{inventarioUrl}}"],
+							"path": ["api", "inventario", "descuento"]
 						}
 					}
 				}
@@ -357,7 +1204,57 @@
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"tipoVenta\": \"PRESENCIAL\",\n  \"clienteNombre\": \"Camila Soto\",\n  \"clienteRut\": \"19876543-2\",\n  \"asistenteNombre\": \"Pedro Vega\",\n  \"codigoDescuento\": null,\n  \"detalles\": [\n    {\n      \"productoId\": 1,\n      \"productoNombre\": \"Cien años de soledad\",\n      \"cantidad\": 2,\n      \"precioUnitario\": 12990\n    }\n  ]\n}"
+							"raw": "{\n  \"tipoVenta\": \"PRESENCIAL\",\n  \"sucursalId\": {{sucursalId}},\n  \"clienteNombre\": \"Camila Soto\",\n  \"clienteRut\": \"19876543-2\",\n  \"asistenteNombre\": \"Pedro Vega\",\n  \"codigoDescuento\": null,\n  \"detalles\": [\n    {\n      \"productoId\": {{productoId}},\n      \"productoNombre\": \"Introducción a los Algoritmos en Java\",\n      \"cantidad\": 2,\n      \"precioUnitario\": 12990\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas"]
+						}
+					}
+				},
+				{
+					"name": "POST Registrar venta sin sucursalId -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request (sucursalId es obligatorio)\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipoVenta\": \"ONLINE\",\n  \"detalles\": [\n    {\n      \"productoId\": {{productoId}},\n      \"productoNombre\": \"Cien años de soledad\",\n      \"cantidad\": 1,\n      \"precioUnitario\": 12990\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas"]
+						}
+					}
+				},
+				{
+					"name": "POST Registrar venta presencial sin asistente -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipoVenta\": \"PRESENCIAL\",\n  \"sucursalId\": {{sucursalId}},\n  \"detalles\": [\n    {\n      \"productoId\": {{productoId}},\n      \"productoNombre\": \"Cien años de soledad\",\n      \"cantidad\": 1,\n      \"precioUnitario\": 12990\n    }\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{ventasUrl}}/api/ventas",
@@ -368,6 +1265,15 @@
 				},
 				{
 					"name": "GET Venta por folio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -379,7 +1285,37 @@
 					}
 				},
 				{
+					"name": "GET Venta por folio inexistente -> 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ventasUrl}}/api/ventas/NO-EXISTE-0000",
+							"host": ["{{ventasUrl}}"],
+							"path": ["api", "ventas", "NO-EXISTE-0000"]
+						}
+					}
+				},
+				{
 					"name": "GET Todas las ventas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -394,9 +1330,40 @@
 		},
 		{
 			"name": "ms-facturacion (8088)",
+			"description": "Nota: ms-ventas emite automáticamente un documento tributario al confirmar cada venta (ver carpeta '0) Flujo E2E'). Por eso el POST manual de este folder, sobre un folio que ya fue vendido, sirve principalmente para demostrar la protección contra doble emisión (409).",
 			"item": [
 				{
-					"name": "POST Emitir documento (BOLETA)",
+					"name": "GET Documento por folio de venta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{facturacionUrl}}/api/facturacion/venta/{{folioVenta}}",
+							"host": ["{{facturacionUrl}}"],
+							"path": ["api", "facturacion", "venta", "{{folioVenta}}"]
+						}
+					}
+				},
+				{
+					"name": "POST Emitir documento para folio ya vendido -> 409 (doble emisión)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 409 Conflict\", () => pm.response.to.have.status(409));"]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -412,13 +1379,22 @@
 					}
 				},
 				{
-					"name": "POST Emitir documento (FACTURA)",
+					"name": "POST Emitir documento para folio inexistente -> 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request (la venta no existe en ms-ventas)\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"folioVenta\": \"{{folioVenta}}\",\n  \"rutCliente\": \"76543210-K\",\n  \"razonSocial\": \"Librería del Sur SpA\",\n  \"giro\": \"Venta de libros\",\n  \"tipoDocumento\": \"FACTURA\",\n  \"montoNeto\": 21824.37\n}"
+							"raw": "{\n  \"folioVenta\": \"NO-EXISTE-9999\",\n  \"rutCliente\": \"19876543-2\",\n  \"tipoDocumento\": \"BOLETA\",\n  \"montoNeto\": 10000\n}"
 						},
 						"url": {
 							"raw": "{{facturacionUrl}}/api/facturacion/emitir",
@@ -428,19 +1404,37 @@
 					}
 				},
 				{
-					"name": "GET Documento por folio de venta",
+					"name": "GET Documento por folio inexistente -> 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{facturacionUrl}}/api/facturacion/venta/{{folioVenta}}",
+							"raw": "{{facturacionUrl}}/api/facturacion/venta/NO-EXISTE-9999",
 							"host": ["{{facturacionUrl}}"],
-							"path": ["api", "facturacion", "venta", "{{folioVenta}}"]
+							"path": ["api", "facturacion", "venta", "NO-EXISTE-9999"]
 						}
 					}
 				},
 				{
 					"name": "GET Todos los documentos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -458,6 +1452,15 @@
 			"item": [
 				{
 					"name": "POST Registrar promoción",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));"]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -474,6 +1477,15 @@
 				},
 				{
 					"name": "GET Todas las promociones",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -486,6 +1498,15 @@
 				},
 				{
 					"name": "GET Validar promoción por código",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -493,6 +1514,27 @@
 							"raw": "{{promocionesUrl}}/api/promociones/validar/DESCUENTO10",
 							"host": ["{{promocionesUrl}}"],
 							"path": ["api", "promociones", "validar", "DESCUENTO10"]
+						}
+					}
+				},
+				{
+					"name": "GET Validar promoción con código inexistente -> 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{promocionesUrl}}/api/promociones/validar/NO-EXISTE",
+							"host": ["{{promocionesUrl}}"],
+							"path": ["api", "promociones", "validar", "NO-EXISTE"]
 						}
 					}
 				}
@@ -532,6 +1574,15 @@
 				},
 				{
 					"name": "GET Todos los proveedores",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -562,7 +1613,7 @@
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"proveedorId\": {{proveedorId}},\n  \"detalles\": [\n    {\n      \"productoId\": 1,\n      \"cantidadSolicitada\": 100,\n      \"costoUnitario\": 6500\n    }\n  ]\n}"
+							"raw": "{\n  \"proveedorId\": {{proveedorId}},\n  \"detalles\": [\n    {\n      \"productoId\": {{productoId}},\n      \"cantidadSolicitada\": 100,\n      \"costoUnitario\": 6500\n    }\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{proveedoresUrl}}/api/proveedores/ordenes",
@@ -573,6 +1624,15 @@
 				},
 				{
 					"name": "PUT Registrar recepción de mercadería",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [],
@@ -608,7 +1668,7 @@
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"ventaId\": 1,\n  \"direccionDestino\": \"Calle Las Heras 567, Concepción\",\n  \"rutaId\": null\n}"
+							"raw": "{\n  \"ventaId\": {{ventaId}},\n  \"direccionDestino\": \"Calle Las Heras 567, Concepción\",\n  \"rutaId\": null\n}"
 						},
 						"url": {
 							"raw": "{{logisticaUrl}}/api/logistica/envios",
@@ -619,6 +1679,15 @@
 				},
 				{
 					"name": "PUT Actualizar estado de envío",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -635,13 +1704,22 @@
 				},
 				{
 					"name": "GET Envío por ventaId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{logisticaUrl}}/api/logistica/envios/venta/1",
+							"raw": "{{logisticaUrl}}/api/logistica/envios/venta/{{ventaId}}",
 							"host": ["{{logisticaUrl}}"],
-							"path": ["api", "logistica", "envios", "venta", "1"]
+							"path": ["api", "logistica", "envios", "venta", "{{ventaId}}"]
 						}
 					}
 				}
@@ -652,6 +1730,15 @@
 			"item": [
 				{
 					"name": "POST Registrar ubicación",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));"]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -668,6 +1755,7 @@
 				},
 				{
 					"name": "POST Crear orden de picking",
+					"description": "Requiere que {{ventaId}} exista en ms-ventas y que {{sucursalId}}/{{productoId}} tengan stock registrado en ms-inventario (ejecutar primero las carpetas ms-ventas y ms-inventario).",
 					"event": [
 						{
 							"listen": "test",
@@ -676,6 +1764,7 @@
 								"exec": [
 									"pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
 									"const json = pm.response.json();",
+									"pm.test(\"Estado inicial es PENDIENTE\", () => pm.expect(json.estado).to.eql('PENDIENTE'));",
 									"pm.collectionVariables.set('pickingId', json.id);"
 								]
 							}
@@ -686,7 +1775,7 @@
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"ventaId\": 1,\n  \"productoId\": 1,\n  \"cantidad\": 2,\n  \"operarioAsignado\": \"Juan Pérez\"\n}"
+							"raw": "{\n  \"ventaId\": {{ventaId}},\n  \"sucursalId\": {{sucursalId}},\n  \"productoId\": {{productoId}},\n  \"cantidad\": 2,\n  \"operarioAsignado\": \"Juan Pérez\"\n}"
 						},
 						"url": {
 							"raw": "{{bodegaUrl}}/api/bodega/picking",
@@ -696,20 +1785,115 @@
 					}
 				},
 				{
-					"name": "PUT Actualizar estado de picking",
+					"name": "POST Crear orden de picking duplicada -> 409",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 409 Conflict\", () => pm.response.to.have.status(409));"]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": {{ventaId}},\n  \"sucursalId\": {{sucursalId}},\n  \"productoId\": {{productoId}},\n  \"cantidad\": 1,\n  \"operarioAsignado\": \"Otro Operario\"\n}"
+						},
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/picking",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "picking"]
+						}
+					}
+				},
+				{
+					"name": "PUT Iniciar picking (PENDIENTE -> EN_PROCESO)",
+					"description": "La máquina de estados de la orden de picking es estricta: PENDIENTE -> EN_PROCESO -> COMPLETADA. No se puede saltar directo a COMPLETADA.",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Estado es EN_PROCESO\", () => pm.expect(pm.response.json().estado).to.eql('EN_PROCESO'));"
+								]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"url": {
-							"raw": "{{bodegaUrl}}/api/bodega/picking/{{pickingId}}/estado?estado=COMPLETADO",
+							"raw": "{{bodegaUrl}}/api/bodega/picking/{{pickingId}}/estado?estado=EN_PROCESO",
 							"host": ["{{bodegaUrl}}"],
 							"path": ["api", "bodega", "picking", "{{pickingId}}", "estado"],
-							"query": [{ "key": "estado", "value": "COMPLETADO" }]
+							"query": [{ "key": "estado", "value": "EN_PROCESO" }]
+						}
+					}
+				},
+				{
+					"name": "PUT Completar picking (EN_PROCESO -> COMPLETADA)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Estado es COMPLETADA\", () => pm.expect(pm.response.json().estado).to.eql('COMPLETADA'));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/picking/{{pickingId}}/estado?estado=COMPLETADA",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "picking", "{{pickingId}}", "estado"],
+							"query": [{ "key": "estado", "value": "COMPLETADA" }]
+						}
+					}
+				},
+				{
+					"name": "PUT Modificar picking ya COMPLETADA -> 400",
+					"description": "Ejecutar DESPUÉS de 'PUT Completar picking'. Una orden COMPLETADA no admite más cambios de estado.",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 400 Bad Request (orden ya COMPLETADA)\", () => pm.response.to.have.status(400));"]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{bodegaUrl}}/api/bodega/picking/{{pickingId}}/estado?estado=EN_PROCESO",
+							"host": ["{{bodegaUrl}}"],
+							"path": ["api", "bodega", "picking", "{{pickingId}}", "estado"],
+							"query": [{ "key": "estado", "value": "EN_PROCESO" }]
 						}
 					}
 				},
 				{
 					"name": "GET Ubicaciones",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -722,6 +1906,15 @@
 				},
 				{
 					"name": "GET Órdenes de picking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": ["pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));"]
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -744,6 +1937,12 @@
 		{ "key": "proveedorId", "value": "1" },
 		{ "key": "ordenCompraId", "value": "1" },
 		{ "key": "envioId", "value": "1" },
-		{ "key": "pickingId", "value": "1" }
+		{ "key": "pickingId", "value": "1" },
+		{ "key": "e2eUsuarioId", "value": "" },
+		{ "key": "e2eSucursalAId", "value": "" },
+		{ "key": "e2eSucursalBId", "value": "" },
+		{ "key": "e2eProductoId", "value": "" },
+		{ "key": "e2eFolioVenta", "value": "" },
+		{ "key": "e2eVentaId", "value": "" }
 	]
 }

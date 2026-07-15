@@ -53,12 +53,22 @@ public class InventarioController {
         return ResponseEntity.ok(response);
     }
 
-    // Endpoint clave consumido por ms-ventas vía FeignClient
+    // Endpoint clave consumido por ms-ventas vía FeignClient.
+    // La disponibilidad es siempre relativa a una sucursal: no se suma el stock de toda la red.
     @GetMapping("/check-stock")
     public ResponseEntity<StockResponseDTO> checkStock(
+            @RequestParam("sucursalId") Long sucursalId,
             @RequestParam("productoId") Long productoId,
             @RequestParam("cantidad") Integer cantidad) {
-        StockResponseDTO response = inventarioService.verificarDisponibilidad(productoId, cantidad);
+        StockResponseDTO response = inventarioService.verificarDisponibilidad(sucursalId, productoId, cantidad);
         return ResponseEntity.ok(response);
+    }
+
+    // Endpoint síncrono consumido por ms-ventas al confirmar una venta: descuenta, en un solo
+    // paso, el stock de todas las líneas en la sucursal donde se realizó la compra.
+    @PostMapping("/descuento")
+    public ResponseEntity<Void> descontarStock(@Valid @RequestBody DescontarStockRequestDTO request) {
+        inventarioService.descontarStockVenta(request);
+        return ResponseEntity.ok().build();
     }
 }

@@ -7,19 +7,16 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+// Petición síncrona a ms-inventario para descontar el stock de la sucursal donde
+// se realizó la venta (reemplaza el antiguo mensaje asíncrono VentaCreadaEvent).
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmitirDocumentoRequestDTO {
-    private String folioVenta;
+public class DescontarStockRequestDTO {
     private Long ventaId;
+    private String folio;
     private Long usuarioId;
     private Long sucursalId;
-    private String rutCliente;
-    private String razonSocial;
-    private String giro;
-    private String tipoDocumento;
-    private Double montoNeto;
-    private List<DetalleDocumentoRequestDTO> detalles;
+    private List<DetalleStockRequestDTO> detalles;
 }

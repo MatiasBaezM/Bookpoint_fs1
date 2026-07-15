@@ -1,0 +1,57 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:04:59.278-04:00  INFO 18480 --- [ms-logistica] [           main] c.b.logistica.LogisticaApplication       : Starting LogisticaApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 18480 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-logistica\target\logistica-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-logistica)
+2026-07-15T11:04:59.293-04:00  INFO 18480 --- [ms-logistica] [           main] c.b.logistica.LogisticaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:05:03.212-04:00  INFO 18480 --- [ms-logistica] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:05:03.366-04:00  INFO 18480 --- [ms-logistica] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 127 ms. Found 2 JPA repository interfaces.
+2026-07-15T11:05:04.016-04:00  INFO 18480 --- [ms-logistica] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=97aac77f-5753-3f32-a9b7-13ea75afe8ba
+2026-07-15T11:05:05.477-04:00  INFO 18480 --- [ms-logistica] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8085 (http)
+2026-07-15T11:05:05.522-04:00  INFO 18480 --- [ms-logistica] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:05:05.523-04:00  INFO 18480 --- [ms-logistica] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:05:05.633-04:00  INFO 18480 --- [ms-logistica] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 6157 ms
+2026-07-15T11:05:06.875-04:00  INFO 18480 --- [ms-logistica] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:05:07.156-04:00  INFO 18480 --- [ms-logistica] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:05:09.057-04:00  INFO 18480 --- [ms-logistica] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:05:09.150-04:00  INFO 18480 --- [ms-logistica] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:05:09.581-04:00  INFO 18480 --- [ms-logistica] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@33373f70
+2026-07-15T11:05:09.586-04:00  INFO 18480 --- [ms-logistica] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:05:09.723-04:00  WARN 18480 --- [ms-logistica] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:05:09.772-04:00  INFO 18480 --- [ms-logistica] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_logistica?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_logistica/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:05:12.153-04:00  INFO 18480 --- [ms-logistica] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table envios 
+       modify column estado enum ('DEVUELTO','ENTREGADO','EN_RUTA','PENDIENTE') not null
+2026-07-15T11:05:12.449-04:00  INFO 18480 --- [ms-logistica] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:05:12.658-04:00  INFO 18480 --- [ms-logistica] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:05:13.842-04:00  WARN 18480 --- [ms-logistica] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:05:16.142-04:00  INFO 18480 --- [ms-logistica] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:05:16.486-04:00  INFO 18480 --- [ms-logistica] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8085 (http) with context path '/'
+2026-07-15T11:05:16.525-04:00  INFO 18480 --- [ms-logistica] [           main] c.b.logistica.LogisticaApplication       : Started LogisticaApplication in 18.839 seconds (process running for 21.735)
+Hibernate: 
+    select
+        count(*) 
+    from
+        rutas_distribucion rd1_0
+2026-07-15T11:05:17.749-04:00  INFO 18480 --- [ms-logistica] [           main] c.b.logistica.config.DataInitializer     : Datos logísticos ya inicializados en la base de datos.
+2026-07-15T11:05:17.752-04:00  WARN 18480 --- [ms-logistica] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:05:17.753-04:00  WARN 18480 --- [ms-logistica] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:02.324-04:00  WARN 18480 --- [ms-logistica] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m22s632ms465µs400ns).

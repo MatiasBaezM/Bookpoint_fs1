@@ -8,7 +8,9 @@ import cl.bookpointchile.ventas.dto.*;
 import cl.bookpointchile.ventas.exception.InsufficientStockException;
 import cl.bookpointchile.ventas.exception.InvalidSaleException;
 import cl.bookpointchile.ventas.exception.ResourceNotFoundException;
+import cl.bookpointchile.ventas.event.VentaRegistradaInternaEvent;
 import feign.FeignException;
+import cl.bookpointchile.ventas.model.EstadoVenta;
 import cl.bookpointchile.ventas.model.TipoDescuento;
 import cl.bookpointchile.ventas.model.TipoVenta;
 import cl.bookpointchile.ventas.model.Venta;
@@ -16,10 +18,10 @@ import cl.bookpointchile.ventas.repository.VentaRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,8 +36,6 @@ class VentaServiceImplTest {
 
     @Mock
     private VentaRepository ventaRepository;
-    @Mock
-    private RabbitTemplate rabbitTemplate;
     @Mock
     private InventarioClient inventarioClient;
     @Mock
@@ -61,7 +61,7 @@ class VentaServiceImplTest {
     }
 
     private StockResponseDTO stockDisponible() {
-        return StockResponseDTO.builder().productoId(1L).disponible(true).stockActual(50).build();
+        return StockResponseDTO.builder().productoId(1L).sucursalId(1L).disponible(true).stockActual(50).build();
     }
 
     // ---------- registrarVenta ----------
@@ -71,13 +71,14 @@ class VentaServiceImplTest {
         // Given
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.PRESENCIAL)
+                .sucursalId(1L)
                 .clienteNombre("Camila Soto")
                 .clienteRut("19876543-2")
                 .asistenteNombre("Pedro Vega")
                 .detalles(List.of(detalle(2, "12990")))
                 .build();
 
-        when(inventarioClient.checkStock(1L, 2)).thenReturn(stockDisponible());
+        when(inventarioClient.checkStock(1L, 1L, 2)).thenReturn(stockDisponible());
         when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
             Venta v = inv.getArgument(0);
             v.setId(1L);
@@ -92,9 +93,11 @@ class VentaServiceImplTest {
         assertEquals(new BigDecimal("25980.00"), response.getTotal());
         assertEquals(TipoDescuento.NINGUNO, response.getTipoDescuento());
         assertTrue(response.getFolio().startsWith("BP-PRE-"));
-        verify(ventaRepository, times(1)).save(any(Venta.class));
-        // Se emite el evento VentaCreada a RabbitMQ
-        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), any(Object.class));
+        assertEquals(EstadoVenta.COMPLETADA, response.getEstado());
+        // Se guarda al crear (PENDIENTE) y de nuevo al fijar el estado final (COMPLETADA)
+        verify(ventaRepository, times(2)).save(any(Venta.class));
+        // El stock se descuenta de forma síncrona en ms-inventario (reemplaza el antiguo mensaje a RabbitMQ)
+        verify(inventarioClient, times(1)).descontarStock(any(DescontarStockRequestDTO.class));
         verify(eventPublisher, times(1)).publishEvent(any());
     }
 
@@ -103,6 +106,7 @@ class VentaServiceImplTest {
         // Given
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.PRESENCIAL)
+                .sucursalId(1L)
                 .asistenteNombre("   ")
                 .detalles(List.of(detalle(1, "10000")))
                 .build();
@@ -118,11 +122,12 @@ class VentaServiceImplTest {
         // Given
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
                 .detalles(List.of(detalle(5, "10000")))
                 .build();
         StockResponseDTO sinStock = StockResponseDTO.builder()
-                .productoId(1L).disponible(false).stockActual(2).build();
-        when(inventarioClient.checkStock(1L, 5)).thenReturn(sinStock);
+                .productoId(1L).sucursalId(1L).disponible(false).stockActual(2).build();
+        when(inventarioClient.checkStock(1L, 1L, 5)).thenReturn(sinStock);
 
         // When + Then
         assertThrows(InsufficientStockException.class, () -> ventaService.registrarVenta(request));
@@ -130,15 +135,142 @@ class VentaServiceImplTest {
     }
 
     @Test
+    void registrarVenta_consultaElStockDeSuSucursalYLoDescuentaDeEsaMisma() {
+        // La venta es en la sucursal 3: el stock debe consultarse en la 3 y el descuento
+        // síncrono a ms-inventario debe pedirse para esa misma sucursal, no otra.
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(3L)
+                .usuarioId(null)
+                .detalles(List.of(detalle(2, "10000")))
+                .build();
+
+        when(inventarioClient.checkStock(3L, 1L, 2)).thenReturn(
+                StockResponseDTO.builder().productoId(1L).sucursalId(3L).disponible(true).stockActual(50).build());
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
+            Venta v = inv.getArgument(0);
+            v.setId(77L);
+            return v;
+        });
+
+        VentaResponseDTO response = ventaService.registrarVenta(request);
+
+        assertEquals(3L, response.getSucursalId());
+        assertEquals(EstadoVenta.COMPLETADA, response.getEstado());
+        verify(inventarioClient, times(1)).checkStock(3L, 1L, 2);
+
+        ArgumentCaptor<DescontarStockRequestDTO> captor = ArgumentCaptor.forClass(DescontarStockRequestDTO.class);
+        verify(inventarioClient).descontarStock(captor.capture());
+        DescontarStockRequestDTO descuento = captor.getValue();
+        assertEquals(3L, descuento.getSucursalId());
+        assertEquals(77L, descuento.getVentaId());
+        assertEquals(1, descuento.getDetalles().size());
+        assertEquals(1L, descuento.getDetalles().get(0).getProductoId());
+        assertEquals(2, descuento.getDetalles().get(0).getCantidad());
+    }
+
+    @Test
+    void registrarVenta_siMsInventarioRechazaElDescuento_quedaRechazadaPeroSeGuarda() {
+        // Simula una condición de carrera: el stock alcanzaba en la verificación previa
+        // pero se agotó antes del descuento real. La venta debe quedar registrada como RECHAZADA,
+        // no perderse ni propagar el error al cliente.
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
+                .detalles(List.of(detalle(2, "10000")))
+                .build();
+
+        when(inventarioClient.checkStock(1L, 1L, 2)).thenReturn(stockDisponible());
+        doThrow(new RuntimeException("Stock insuficiente en ms-inventario"))
+                .when(inventarioClient).descontarStock(any());
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        VentaResponseDTO response = ventaService.registrarVenta(request);
+
+        assertEquals(EstadoVenta.RECHAZADA, response.getEstado());
+        verify(ventaRepository, times(2)).save(any(Venta.class));
+    }
+
+    @Test
+    void registrarVenta_enviaAFacturacionLaVentaElUsuarioLaSucursalYElDetalle() {
+        // Given
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(2L)
+                .usuarioId(5L)
+                .detalles(List.of(detalle(2, "10000")))
+                .build();
+
+        when(usuarioClient.obtenerUsuarioPorId(5L)).thenReturn(
+                UsuarioResponseDTO.builder().id(5L).nombre("Ana López").rut("12345678-9").estado("ACTIVO").build());
+        when(inventarioClient.checkStock(2L, 1L, 2)).thenReturn(
+                StockResponseDTO.builder().productoId(1L).sucursalId(2L).disponible(true).stockActual(50).build());
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
+            Venta v = inv.getArgument(0);
+            v.setId(88L);
+            return v;
+        });
+
+        // When
+        ventaService.registrarVenta(request);
+
+        // Then: el documento tributario se pide con la trazabilidad completa
+        ArgumentCaptor<VentaRegistradaInternaEvent> captor =
+                ArgumentCaptor.forClass(VentaRegistradaInternaEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        EmitirDocumentoRequestDTO facturaRequest = captor.getValue().getRequest();
+
+        assertEquals(88L, facturaRequest.getVentaId());
+        assertEquals(5L, facturaRequest.getUsuarioId());
+        assertEquals(2L, facturaRequest.getSucursalId());
+        assertEquals("12345678-9", facturaRequest.getRutCliente());
+        assertEquals(1, facturaRequest.getDetalles().size());
+        assertEquals(1L, facturaRequest.getDetalles().get(0).getProductoId());
+        assertEquals(2, facturaRequest.getDetalles().get(0).getCantidad());
+    }
+
+    @Test
+    void registrarVentaSinUsuarioRegistrado_facturaConRutGenericoYSinUsuarioId() {
+        // Given (venta anónima: no hay usuarioId)
+        VentaRequestDTO request = VentaRequestDTO.builder()
+                .tipoVenta(TipoVenta.PRESENCIAL)
+                .sucursalId(1L)
+                .asistenteNombre("Pedro Vega")
+                .detalles(List.of(detalle(1, "10000")))
+                .build();
+
+        when(inventarioClient.checkStock(1L, 1L, 1)).thenReturn(stockDisponible());
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
+            Venta v = inv.getArgument(0);
+            v.setId(89L);
+            return v;
+        });
+
+        // When
+        ventaService.registrarVenta(request);
+
+        // Then
+        ArgumentCaptor<VentaRegistradaInternaEvent> captor =
+                ArgumentCaptor.forClass(VentaRegistradaInternaEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        EmitirDocumentoRequestDTO facturaRequest = captor.getValue().getRequest();
+
+        assertNull(facturaRequest.getUsuarioId());
+        assertEquals("66666666-6", facturaRequest.getRutCliente()); // RUT genérico
+        assertEquals(1L, facturaRequest.getSucursalId());
+    }
+
+    @Test
     void registrarVentaConCuponValido_aplicaDescuento() {
         // Given (10% de descuento sobre 20000 = 2000 -> total 18000)
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
                 .codigoDescuento("DESCUENTO10")
                 .detalles(List.of(detalle(2, "10000")))
                 .build();
 
-        when(inventarioClient.checkStock(1L, 2)).thenReturn(stockDisponible());
+        when(inventarioClient.checkStock(1L, 1L, 2)).thenReturn(stockDisponible());
         when(promocionClient.validarPromocion("DESCUENTO10"))
                 .thenReturn(PromocionResponseDTO.builder()
                         .codigo("DESCUENTO10").porcentajeDescuento(10).vigente(true).build());
@@ -162,6 +294,7 @@ class VentaServiceImplTest {
         // Given
         Venta venta = Venta.builder()
                 .id(1L).folio("BP-PRE-ABCD1234").tipoVenta(TipoVenta.PRESENCIAL)
+                .sucursalId(1L)
                 .subtotal(new BigDecimal("10000")).total(new BigDecimal("10000"))
                 .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
                 .build();
@@ -189,6 +322,7 @@ class VentaServiceImplTest {
         // Given
         Venta venta = Venta.builder()
                 .id(1L).folio("BP-ONL-0001").tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
                 .subtotal(new BigDecimal("5000")).total(new BigDecimal("5000"))
                 .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
                 .build();
@@ -208,13 +342,14 @@ class VentaServiceImplTest {
         // Given
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
                 .usuarioId(5L)
                 .detalles(List.of(detalle(1, "10000")))
                 .build();
 
         when(usuarioClient.obtenerUsuarioPorId(5L)).thenReturn(
                 UsuarioResponseDTO.builder().id(5L).nombre("Ana López").rut("12345678-9").estado("ACTIVO").build());
-        when(inventarioClient.checkStock(1L, 1)).thenReturn(stockDisponible());
+        when(inventarioClient.checkStock(1L, 1L, 1)).thenReturn(stockDisponible());
         when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> {
             Venta v = inv.getArgument(0);
             v.setId(10L);
@@ -236,6 +371,7 @@ class VentaServiceImplTest {
         // Given
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
                 .usuarioId(7L)
                 .detalles(List.of(detalle(1, "10000")))
                 .build();
@@ -253,6 +389,7 @@ class VentaServiceImplTest {
         // Given
         VentaRequestDTO request = VentaRequestDTO.builder()
                 .tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L)
                 .usuarioId(999L)
                 .detalles(List.of(detalle(1, "10000")))
                 .build();
@@ -269,7 +406,8 @@ class VentaServiceImplTest {
     void obtenerVentasPorUsuario_retornaHistorial() {
         // Given
         Venta venta = Venta.builder()
-                .id(1L).folio("BP-ONL-0001").tipoVenta(TipoVenta.ONLINE).usuarioId(5L)
+                .id(1L).folio("BP-ONL-0001").tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L).usuarioId(5L)
                 .subtotal(new BigDecimal("5000")).total(new BigDecimal("5000"))
                 .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
                 .build();
@@ -288,7 +426,8 @@ class VentaServiceImplTest {
     void obtenerVentaPorIdExistente_retornaVenta() {
         // Given
         Venta venta = Venta.builder()
-                .id(10L).folio("BP-ONL-1010").tipoVenta(TipoVenta.ONLINE).usuarioId(5L)
+                .id(10L).folio("BP-ONL-1010").tipoVenta(TipoVenta.ONLINE)
+                .sucursalId(1L).usuarioId(5L)
                 .subtotal(new BigDecimal("5000")).total(new BigDecimal("5000"))
                 .descuentoAplicado(BigDecimal.ZERO).tipoDescuento(TipoDescuento.NINGUNO)
                 .build();

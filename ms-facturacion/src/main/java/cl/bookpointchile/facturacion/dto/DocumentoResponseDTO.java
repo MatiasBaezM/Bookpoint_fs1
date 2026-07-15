@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -14,6 +15,9 @@ import java.time.LocalDateTime;
 public class DocumentoResponseDTO {
     private Long id;
     private String folioVenta;
+    private Long ventaId;
+    private Long usuarioId;
+    private Long sucursalId;
     private String rutCliente;
     private String razonSocial;
     private String giro;
@@ -22,4 +26,5 @@ public class DocumentoResponseDTO {
     private Double montoIva;
     private Double montoTotal;
     private LocalDateTime fechaEmision;
+    private List<DetalleDocumentoResponseDTO> detalles;
 }

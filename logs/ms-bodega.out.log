@@ -1,0 +1,158 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:06:19.847-04:00  INFO 20868 --- [ms-bodega] [           main] c.b.bodega.BodegaApplication             : Starting BodegaApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 20868 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-bodega\target\bodega-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-bodega)
+2026-07-15T11:06:19.859-04:00  INFO 20868 --- [ms-bodega] [           main] c.b.bodega.BodegaApplication             : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:06:23.009-04:00  INFO 20868 --- [ms-bodega] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:06:23.157-04:00  INFO 20868 --- [ms-bodega] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 116 ms. Found 2 JPA repository interfaces.
+2026-07-15T11:06:24.066-04:00  INFO 20868 --- [ms-bodega] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=58878829-c51c-3676-b79b-b5d260ce75f1
+2026-07-15T11:06:25.881-04:00  INFO 20868 --- [ms-bodega] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8089 (http)
+2026-07-15T11:06:25.925-04:00  INFO 20868 --- [ms-bodega] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:06:25.926-04:00  INFO 20868 --- [ms-bodega] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:06:26.027-04:00  INFO 20868 --- [ms-bodega] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 6009 ms
+2026-07-15T11:06:27.313-04:00  INFO 20868 --- [ms-bodega] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:06:27.507-04:00  INFO 20868 --- [ms-bodega] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:06:28.813-04:00  INFO 20868 --- [ms-bodega] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:06:28.892-04:00  INFO 20868 --- [ms-bodega] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:06:29.249-04:00  INFO 20868 --- [ms-bodega] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5464aeec
+2026-07-15T11:06:29.253-04:00  INFO 20868 --- [ms-bodega] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:06:29.370-04:00  WARN 20868 --- [ms-bodega] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:06:29.414-04:00  INFO 20868 --- [ms-bodega] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_bodega?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_bodega/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:06:31.367-04:00  INFO 20868 --- [ms-bodega] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table ordenes_picking 
+       add column sucursal_id bigint not null
+2026-07-15T11:06:31.562-04:00  INFO 20868 --- [ms-bodega] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:06:31.884-04:00  INFO 20868 --- [ms-bodega] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:06:32.953-04:00  WARN 20868 --- [ms-bodega] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:06:36.537-04:00  INFO 20868 --- [ms-bodega] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:06:36.703-04:00  INFO 20868 --- [ms-bodega] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8089 (http) with context path '/'
+2026-07-15T11:06:36.738-04:00  INFO 20868 --- [ms-bodega] [           main] c.b.bodega.BodegaApplication             : Started BodegaApplication in 18.207 seconds (process running for 19.871)
+Hibernate: 
+    select
+        count(*) 
+    from
+        ubicaciones_fisicas uf1_0
+Hibernate: 
+    select
+        count(*) 
+    from
+        ordenes_picking op1_0
+2026-07-15T11:06:37.870-04:00  WARN 20868 --- [ms-bodega] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:06:37.871-04:00  WARN 20868 --- [ms-bodega] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:27.599-04:00  WARN 20868 --- [ms-bodega] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m28s238ms33µs800ns).
+2026-07-15T11:33:50.876-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-15T11:33:50.877-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-15T11:33:50.884-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 5 ms
+2026-07-15T11:33:51.344-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-2] c.b.bodega.service.BodegaServiceImpl     : Creando orden de picking para la venta ID: 2, Sucursal ID: 4, Producto ID: 6, Cantidad: 1, Asignada al operario: 'Juan Perez'
+Hibernate: 
+    select
+        op1_0.id 
+    from
+        ordenes_picking op1_0 
+    where
+        op1_0.venta_id=? 
+    limit
+        ?
+Hibernate: 
+    insert 
+    into
+        ordenes_picking
+        (cantidad, estado, fecha_asignacion, operario_asignado, producto_id, sucursal_id, venta_id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2026-07-15T11:33:51.818-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-2] c.b.bodega.service.BodegaServiceImpl     : Orden de picking creada con éxito. ID: 2, Venta: 2, Sucursal: 4, Estado: PENDIENTE
+2026-07-15T11:33:52.241-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-5] c.b.bodega.service.BodegaServiceImpl     : Solicitud de cambio de estado para la Orden ID: 2 a 'EN_PROCESO'
+Hibernate: 
+    select
+        op1_0.id,
+        op1_0.cantidad,
+        op1_0.estado,
+        op1_0.fecha_asignacion,
+        op1_0.operario_asignado,
+        op1_0.producto_id,
+        op1_0.sucursal_id,
+        op1_0.venta_id 
+    from
+        ordenes_picking op1_0 
+    where
+        op1_0.id=?
+2026-07-15T11:33:52.276-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-5] c.b.bodega.service.BodegaServiceImpl     : Operario 'Juan Perez' comenzó a armar el pedido para la venta ID: 2
+Hibernate: 
+    update
+        ordenes_picking 
+    set
+        cantidad=?,
+        estado=?,
+        fecha_asignacion=?,
+        operario_asignado=?,
+        producto_id=?,
+        sucursal_id=?,
+        venta_id=? 
+    where
+        id=?
+2026-07-15T11:33:52.371-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-7] c.b.bodega.service.BodegaServiceImpl     : Solicitud de cambio de estado para la Orden ID: 2 a 'COMPLETADA'
+Hibernate: 
+    select
+        op1_0.id,
+        op1_0.cantidad,
+        op1_0.estado,
+        op1_0.fecha_asignacion,
+        op1_0.operario_asignado,
+        op1_0.producto_id,
+        op1_0.sucursal_id,
+        op1_0.venta_id 
+    from
+        ordenes_picking op1_0 
+    where
+        op1_0.id=?
+2026-07-15T11:33:52.376-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-7] c.b.bodega.service.BodegaServiceImpl     : Orden de picking ID: 2 completada con éxito por el operario 'Juan Perez'
+2026-07-15T11:33:52.430-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-7] c.b.bodega.service.BodegaServiceImpl     : Stock descontado en ms-inventario por picking completado. Venta ID: 2, Producto ID: 6, Sucursal ID: 4, Cantidad: 1
+Hibernate: 
+    update
+        ordenes_picking 
+    set
+        cantidad=?,
+        estado=?,
+        fecha_asignacion=?,
+        operario_asignado=?,
+        producto_id=?,
+        sucursal_id=?,
+        venta_id=? 
+    where
+        id=?
+2026-07-15T11:33:52.508-04:00  INFO 20868 --- [ms-bodega] [nio-8089-exec-9] c.b.bodega.service.BodegaServiceImpl     : Solicitud de cambio de estado para la Orden ID: 2 a 'EN_PROCESO'
+Hibernate: 
+    select
+        op1_0.id,
+        op1_0.cantidad,
+        op1_0.estado,
+        op1_0.fecha_asignacion,
+        op1_0.operario_asignado,
+        op1_0.producto_id,
+        op1_0.sucursal_id,
+        op1_0.venta_id 
+    from
+        ordenes_picking op1_0 
+    where
+        op1_0.id=?
+2026-07-15T11:33:52.513-04:00  WARN 20868 --- [ms-bodega] [nio-8089-exec-9] c.b.bodega.service.BodegaServiceImpl     : Máquina de estados: Intento de violar estados. Orden ID: 2 ya se encuentra COMPLETADA y se intentó pasar a 'EN_PROCESO'
+2026-07-15T11:38:51.893-04:00  WARN 20868 --- [ms-bodega] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m24s254ms784µs400ns).

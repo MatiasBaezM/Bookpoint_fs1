@@ -10,6 +10,10 @@ public interface InventarioService {
     InventarioResponseDTO obtenerStock(Long sucursalId, Long productoId);
     List<InventarioResponseDTO> obtenerStockPorSucursal(Long sucursalId);
     List<InventarioResponseDTO> obtenerAlertasReposicion();
-    StockResponseDTO verificarDisponibilidad(Long productoId, Integer cantidad);
-    void procesarVentaCreada(cl.bookpointchile.inventario.event.VentaCreadaEvent event);
+    StockResponseDTO verificarDisponibilidad(Long sucursalId, Long productoId, Integer cantidad);
+
+    // Descuenta, de forma síncrona y atómica, el stock de la sucursal indicada.
+    // Lanza StockInsuficienteException si algún detalle no alcanza, dejando el inventario
+    // intacto (rollback de la transacción).
+    void descontarStockVenta(DescontarStockRequestDTO request);
 }

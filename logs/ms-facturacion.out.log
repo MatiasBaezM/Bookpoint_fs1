@@ -1,0 +1,195 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-07-15T11:03:49.343-04:00  INFO 18036 --- [ms-facturacion] [           main] c.b.facturacion.FacturacionApplication   : Starting FacturacionApplication v0.0.1-SNAPSHOT using Java 25.0.1 with PID 18036 (C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-facturacion\target\facturacion-0.0.1-SNAPSHOT.jar started by Matias in C:\Users\Matias\Desktop\Proyectos_fs1\Bookpoint_fs1\ms-facturacion)
+2026-07-15T11:03:49.359-04:00  INFO 18036 --- [ms-facturacion] [           main] c.b.facturacion.FacturacionApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-07-15T11:03:52.869-04:00  INFO 18036 --- [ms-facturacion] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-15T11:03:53.065-04:00  INFO 18036 --- [ms-facturacion] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 159 ms. Found 1 JPA repository interface.
+2026-07-15T11:03:53.803-04:00  INFO 18036 --- [ms-facturacion] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=16c72d72-0a78-376f-aeb1-56e69183f0fd
+2026-07-15T11:03:55.135-04:00  INFO 18036 --- [ms-facturacion] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8088 (http)
+2026-07-15T11:03:55.188-04:00  INFO 18036 --- [ms-facturacion] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-15T11:03:55.189-04:00  INFO 18036 --- [ms-facturacion] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.21]
+2026-07-15T11:03:55.285-04:00  INFO 18036 --- [ms-facturacion] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 5699 ms
+2026-07-15T11:03:56.101-04:00  INFO 18036 --- [ms-facturacion] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-15T11:03:56.339-04:00  INFO 18036 --- [ms-facturacion] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.12.Final
+2026-07-15T11:03:57.986-04:00  INFO 18036 --- [ms-facturacion] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-15T11:03:58.071-04:00  INFO 18036 --- [ms-facturacion] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-15T11:03:58.488-04:00  INFO 18036 --- [ms-facturacion] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@33373f70
+2026-07-15T11:03:58.493-04:00  INFO 18036 --- [ms-facturacion] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-15T11:03:58.634-04:00  WARN 18036 --- [ms-facturacion] [           main] org.hibernate.orm.core                   : HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported, hence certain features may not work properly.The minimum supported version is 8.0.0. Check the community dialects project for available legacy versions.
+2026-07-15T11:03:58.692-04:00  INFO 18036 --- [ms-facturacion] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/bookpoint_facturacion?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 5.5.5
+	Default catalog/schema: bookpoint_facturacion/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-15T11:04:01.173-04:00  INFO 18036 --- [ms-facturacion] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    create table detalles_documento (
+        id bigint not null auto_increment,
+        cantidad integer not null,
+        precio_unitario decimal(12,2) not null,
+        producto_id bigint not null,
+        producto_nombre varchar(150) not null,
+        subtotal decimal(12,2) not null,
+        documento_id bigint not null,
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    alter table documentos_tributarios 
+       add column sucursal_id bigint
+Hibernate: 
+    alter table documentos_tributarios 
+       add column usuario_id bigint
+Hibernate: 
+    alter table documentos_tributarios 
+       add column venta_id bigint
+Hibernate: 
+    alter table detalles_documento 
+       add constraint FKbytllp08y4h9w96saf64eepoo 
+       foreign key (documento_id) 
+       references documentos_tributarios (id)
+2026-07-15T11:04:01.557-04:00  INFO 18036 --- [ms-facturacion] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-15T11:04:01.761-04:00  INFO 18036 --- [ms-facturacion] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-15T11:04:02.769-04:00  WARN 18036 --- [ms-facturacion] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-15T11:04:04.748-04:00  INFO 18036 --- [ms-facturacion] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-07-15T11:04:04.922-04:00  INFO 18036 --- [ms-facturacion] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8088 (http) with context path '/'
+2026-07-15T11:04:04.959-04:00  INFO 18036 --- [ms-facturacion] [           main] c.b.facturacion.FacturacionApplication   : Started FacturacionApplication in 17.232 seconds (process running for 19.326)
+Hibernate: 
+    select
+        count(*) 
+    from
+        documentos_tributarios dt1_0
+2026-07-15T11:04:06.028-04:00  INFO 18036 --- [ms-facturacion] [           main] c.b.facturacion.config.DataInitializer   : El catálogo fiscal de ms-facturacion ya contiene datos sembrados.
+2026-07-15T11:04:06.031-04:00  WARN 18036 --- [ms-facturacion] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-07-15T11:04:06.033-04:00  WARN 18036 --- [ms-facturacion] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-07-15T11:18:05.174-04:00  WARN 18036 --- [ms-facturacion] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=9m6s558ms867µs300ns).
+2026-07-15T11:31:43.773-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-5] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-15T11:31:43.774-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-5] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-15T11:31:43.779-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-5] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms
+2026-07-15T11:31:44.363-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-5] c.b.f.service.FacturacionServiceImpl     : Iniciando emisión de BOLETA para el Folio de Venta: 'BP-PRE-2F69F7EB'
+Hibernate: 
+    select
+        dt1_0.id 
+    from
+        documentos_tributarios dt1_0 
+    where
+        dt1_0.folio_venta=? 
+    limit
+        ?
+2026-07-15T11:31:46.139-04:00 ERROR 18036 --- [ms-facturacion] [nio-8088-exec-5] c.b.f.service.FacturacionServiceImpl     : Cliente no encontrado en ms-usuarios con RUT: '19876543-2'
+2026-07-15T11:32:05.209-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-6] c.b.f.service.FacturacionServiceImpl     : Buscando documento tributario para el folio de venta: 'BP-PRE-2F69F7EB'
+Hibernate: 
+    select
+        dt1_0.id,
+        dt1_0.fecha_emision,
+        dt1_0.folio_venta,
+        dt1_0.giro,
+        dt1_0.monto_iva,
+        dt1_0.monto_neto,
+        dt1_0.monto_total,
+        dt1_0.razon_social,
+        dt1_0.rut_cliente,
+        dt1_0.sucursal_id,
+        dt1_0.tipo_documento,
+        dt1_0.usuario_id,
+        dt1_0.venta_id 
+    from
+        documentos_tributarios dt1_0 
+    where
+        dt1_0.folio_venta=?
+2026-07-15T11:32:05.251-04:00  WARN 18036 --- [ms-facturacion] [nio-8088-exec-6] c.b.f.service.FacturacionServiceImpl     : Documento tributario no encontrado para el folio de venta: 'BP-PRE-2F69F7EB'
+2026-07-15T11:32:05.337-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-8] c.b.f.service.FacturacionServiceImpl     : Iniciando emisión de BOLETA para el Folio de Venta: 'BP-PRE-2F69F7EB'
+Hibernate: 
+    select
+        dt1_0.id 
+    from
+        documentos_tributarios dt1_0 
+    where
+        dt1_0.folio_venta=? 
+    limit
+        ?
+2026-07-15T11:32:05.381-04:00 ERROR 18036 --- [ms-facturacion] [nio-8088-exec-8] c.b.f.service.FacturacionServiceImpl     : Cliente no encontrado en ms-usuarios con RUT: '19876543-2'
+2026-07-15T11:32:34.653-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-9] c.b.f.service.FacturacionServiceImpl     : Iniciando emisión de BOLETA para el Folio de Venta: 'BP-PRE-905B8F74'
+Hibernate: 
+    select
+        dt1_0.id 
+    from
+        documentos_tributarios dt1_0 
+    where
+        dt1_0.folio_venta=? 
+    limit
+        ?
+2026-07-15T11:32:34.703-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-9] c.b.f.service.FacturacionServiceImpl     : Cálculos fiscales completados. Neto: 12605.0, IVA (19%): 2395.0, Total: 15000.0
+Hibernate: 
+    insert 
+    into
+        documentos_tributarios
+        (fecha_emision, folio_venta, giro, monto_iva, monto_neto, monto_total, razon_social, rut_cliente, sucursal_id, tipo_documento, usuario_id, venta_id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        detalles_documento
+        (cantidad, documento_id, precio_unitario, producto_id, producto_nombre, subtotal) 
+    values
+        (?, ?, ?, ?, ?, ?)
+2026-07-15T11:32:34.863-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-9] c.b.f.service.FacturacionServiceImpl     : BOLETA emitida de forma exitosa. ID: 3, Folio: 'BP-PRE-905B8F74', Venta ID: 2, Usuario ID: 2, Sucursal ID: 4, Productos: 1, Total: $15000.0
+2026-07-15T11:32:51.424-04:00  INFO 18036 --- [ms-facturacion] [io-8088-exec-10] c.b.f.service.FacturacionServiceImpl     : Buscando documento tributario para el folio de venta: 'BP-PRE-905B8F74'
+Hibernate: 
+    select
+        dt1_0.id,
+        dt1_0.fecha_emision,
+        dt1_0.folio_venta,
+        dt1_0.giro,
+        dt1_0.monto_iva,
+        dt1_0.monto_neto,
+        dt1_0.monto_total,
+        dt1_0.razon_social,
+        dt1_0.rut_cliente,
+        dt1_0.sucursal_id,
+        dt1_0.tipo_documento,
+        dt1_0.usuario_id,
+        dt1_0.venta_id 
+    from
+        documentos_tributarios dt1_0 
+    where
+        dt1_0.folio_venta=?
+Hibernate: 
+    select
+        d1_0.documento_id,
+        d1_0.id,
+        d1_0.cantidad,
+        d1_0.precio_unitario,
+        d1_0.producto_id,
+        d1_0.producto_nombre,
+        d1_0.subtotal 
+    from
+        detalles_documento d1_0 
+    where
+        d1_0.documento_id=?
+2026-07-15T11:32:51.546-04:00  INFO 18036 --- [ms-facturacion] [nio-8088-exec-2] c.b.f.service.FacturacionServiceImpl     : Iniciando emisión de BOLETA para el Folio de Venta: 'BP-PRE-905B8F74'
+Hibernate: 
+    select
+        dt1_0.id 
+    from
+        documentos_tributarios dt1_0 
+    where
+        dt1_0.folio_venta=? 
+    limit
+        ?
+2026-07-15T11:32:51.551-04:00  WARN 18036 --- [ms-facturacion] [nio-8088-exec-2] c.b.f.service.FacturacionServiceImpl     : Intento fallido de emisión: El folio de venta 'BP-PRE-905B8F74' ya tiene un documento emitido.
